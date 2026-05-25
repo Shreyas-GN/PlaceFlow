@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from app.schemas.student import StudentCreate, StudentResponse, StudentUpdate
+from app.schemas.student import StudentCreate, StudentResponse, StudentUpdate, ChangePassword
 from app.schemas.auth import LoginSchema, Token
 from app.services.auth_service import AuthService, get_db
 from app.models.student import Student
@@ -31,3 +31,11 @@ def update_me(
     db.commit()
     db.refresh(current_user)
     return current_user
+
+@router.put("/me/password")
+def change_password(
+    passwords: ChangePassword,
+    current_user: Student = Depends(AuthService.get_current_user),
+    db: Session = Depends(get_db)
+):
+    return AuthService.change_password(db, current_user, passwords.current_password, passwords.new_password)

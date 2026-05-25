@@ -6,25 +6,20 @@ const api = axios.create({
   baseURL: API_URL,
 });
 
-// Interceptor: attach student OR admin token (admin takes priority)
+// Attach token to every request
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
-    const isAdminRoute = config.url?.startsWith('/admin');
-    
-    if (isAdminRoute) {
-      const adminStorage = localStorage.getItem('admin-auth-storage');
-      if (adminStorage) {
-        try {
-          const { state } = JSON.parse(adminStorage);
-          if (state.token) {
-            config.headers.Authorization = `Bearer ${state.token}`;
-            return config;
-          }
-        } catch (e) {}
-      }
+    const adminStorage = localStorage.getItem('admin-auth-storage');
+    if (adminStorage) {
+      try {
+        const { state } = JSON.parse(adminStorage);
+        if (state.token) {
+          config.headers.Authorization = `Bearer ${state.token}`;
+          return config;
+        }
+      } catch (e) {}
     }
 
-    // Default to student token for all other routes
     const authStorage = localStorage.getItem('auth-storage');
     if (authStorage) {
       try {
@@ -37,5 +32,22 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+// Global 401 handling: clear tokens and redirect
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (typeof window !== 'undefined' && error.response?.status === 401) {
+      const url = error.config?.url || '';
+      const isAdminRoute = url.startsWith('/admin') || url.startsWith('/companies/') || url.startsWith('/applications/all');
+      try {
+        localStorage.removeItem('admin-auth-storage');
+        localStorage.removeItem('auth-storage');
+      } catch (e) {}
+      window.location.href = isAdminRoute ? '/admin/login' : '/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default api;

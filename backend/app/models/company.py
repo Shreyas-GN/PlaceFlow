@@ -13,8 +13,9 @@ class Company(Base):
     role = Column(String, nullable=False)
     package = Column(String, nullable=False)
     min_cgpa = Column(Float, nullable=False)
-    eligible_departments = Column(Text, nullable=False) # Store as comma-separated or JSON
+    eligible_departments = Column(Text, nullable=False)
     deadline = Column(DateTime(timezone=True), nullable=False)
+    status = Column(String, default="active", nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     applications = relationship("Application", back_populates="company")

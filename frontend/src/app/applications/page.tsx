@@ -1,35 +1,24 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { applicationService, Application } from "@/services/application.service";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { CheckCircle2, Clock, Briefcase, Building2, Filter, X, DollarSign, GraduationCap, Calendar, Users } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Briefcase, Filter, DollarSign, GraduationCap, Calendar, Users, X, Building2 } from "lucide-react";
 import { TableSkeleton } from "@/components/shared/Skeleton";
-
-const getStatusBadge = (status: string) => {
-  switch (status.toLowerCase()) {
-    case 'applied':
-      return <span className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs font-semibold">Applied</span>;
-    case 'shortlisted':
-      return <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold">Shortlisted</span>;
-    case 'rejected':
-      return <span className="px-3 py-1 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 text-xs font-semibold">Rejected</span>;
-    case 'selected':
-      return <span className="px-3 py-1 rounded-full bg-emerald-500 text-white text-xs font-semibold">Selected</span>;
-    default:
-      return <span className="px-3 py-1 rounded-full bg-zinc-800 text-zinc-500 text-xs font-semibold">{status}</span>;
-  }
-};
+import { CompanyLogo } from "@/components/shared/CompanyLogo";
+import { getStatusColor } from "@/lib/status";
 
 export default function ApplicationsPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const statusFilter = searchParams.get("status");
   const [applications, setApplications] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const FILTERS = ["All", "Applied", "Shortlisted", "Interview", "Rejected", "Selected"];
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -47,173 +36,194 @@ export default function ApplicationsPage() {
 
   const [selectedCompany, setSelectedCompany] = useState<any>(null);
 
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = { All: applications.length };
+    for (const app of applications) {
+      const key = app.status.charAt(0).toUpperCase() + app.status.slice(1).toLowerCase();
+      counts[key] = (counts[key] || 0) + 1;
+    }
+    return counts;
+  }, [applications]);
+
   const filtered = useMemo(() => {
-    if (!statusFilter) return applications;
+    if (!statusFilter || statusFilter === "All") return applications;
     return applications.filter(a => a.status.toLowerCase() === statusFilter.toLowerCase());
   }, [applications, statusFilter]);
+
+  const getFilterColor = (status: string) => {
+    switch (status) {
+      case "All": return "data-[active=true]:bg-zinc-100 data-[active=true]:text-zinc-900";
+      case "Applied": return "data-[active=true]:bg-blue-500/15 data-[active=true]:text-blue-400 data-[active=true]:border-blue-500/30";
+      case "Shortlisted": return "data-[active=true]:bg-emerald-500/15 data-[active=true]:text-emerald-400 data-[active=true]:border-emerald-500/30";
+      case "Interview": return "data-[active=true]:bg-amber-500/15 data-[active=true]:text-amber-400 data-[active=true]:border-amber-500/30";
+      case "Rejected": return "data-[active=true]:bg-red-500/15 data-[active=true]:text-red-400 data-[active=true]:border-red-500/30";
+      case "Selected": return "data-[active=true]:bg-emerald-500/25 data-[active=true]:text-emerald-300 data-[active=true]:border-emerald-400/40";
+      default: return "";
+    }
+  };
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <h1 className="text-3xl font-bold tracking-tight">Your Applications</h1>
-          <p className="text-zinc-500 mt-1 text-sm">
-            {statusFilter ? `Showing ${statusFilter.toLowerCase()} applications` : "Track your recruitment journey in real-time."}
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight">Your Applications</h1>
+          <p className="text-zinc-500 mt-0.5 text-xs">
+            {statusFilter && statusFilter !== "All" ? `Showing ${statusFilter.toLowerCase()} applications` : "Track your recruitment journey in real-time."}
           </p>
-        </motion.div>
+        </div>
 
-        {statusFilter && (
-          <motion.a
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            href="/applications"
-            className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
-          >
-            <Filter className="w-3 h-3" /> Clear filter
-          </motion.a>
-        )}
+        <div className="flex items-center gap-2 flex-wrap">
+          {FILTERS.map(status => (
+            <button
+              key={status}
+              data-active={(!statusFilter || statusFilter === "All") ? status === "All" : status.toLowerCase() === statusFilter.toLowerCase()}
+              onClick={() => {
+                const params = new URLSearchParams(searchParams.toString());
+                if (status === "All") {
+                  params.delete("status");
+                } else {
+                  params.set("status", status.toLowerCase());
+                }
+                const qs = params.toString();
+                router.push(qs ? `/applications?${qs}` : "/applications");
+              }}
+              className={`px-3 py-1 rounded text-xs font-medium border border-zinc-800/60 transition-all hover:bg-zinc-900 ${getFilterColor(status)}`}
+            >
+              {status}
+              {statusCounts[status] !== undefined && (
+                <span className="ml-1 opacity-60">({statusCounts[status]})</span>
+              )}
+            </button>
+          ))}
+        </div>
 
         {isLoading ? (
-          <div className="p-6 rounded-2xl bg-zinc-950 border border-zinc-800">
+          <div className="rounded border border-zinc-800/60 bg-layer-2">
             <TableSkeleton rows={4} />
           </div>
         ) : applications.length === 0 ? (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col items-center justify-center p-16 rounded-2xl border border-dashed border-zinc-800 bg-zinc-950 text-center"
-          >
-            <Clock className="w-10 h-10 text-zinc-700 mb-4" />
-            <h3 className="text-lg font-semibold text-zinc-400">No applications yet</h3>
-            <p className="text-zinc-600 mt-1 text-sm max-w-sm">
-                Explore eligible companies and kickstart your recruitment process today.
+          <div className="flex flex-col items-center justify-center py-14 rounded border border-dashed border-zinc-800/60 bg-layer-2 text-center">
+            <Briefcase className="w-8 h-8 text-zinc-700 mb-3" />
+            <h3 className="text-sm font-medium text-zinc-400">No applications yet</h3>
+            <p className="text-zinc-600 mt-0.5 text-xs max-w-sm">
+                Start your placement journey by applying to companies that match your profile and CGPA.
             </p>
-          </motion.div>
+            <button
+              onClick={() => router.push("/companies")}
+              className="mt-4 h-9 px-4 rounded bg-primary text-primary-foreground text-xs font-medium hover:opacity-90 transition-all"
+            >
+              Browse Companies
+            </button>
+          </div>
         ) : filtered.length === 0 ? (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col items-center justify-center p-16 rounded-2xl border border-dashed border-zinc-800 bg-zinc-950 text-center"
-          >
-            <Filter className="w-10 h-10 text-zinc-700 mb-4" />
-            <h3 className="text-lg font-semibold text-zinc-400">No {statusFilter?.toLowerCase()} applications</h3>
-            <p className="text-zinc-600 mt-1 text-sm max-w-sm">
-              No applications match this filter.
+          <div className="flex flex-col items-center justify-center py-14 rounded border border-dashed border-zinc-800/60 bg-layer-2 text-center">
+            <Filter className="w-8 h-8 text-zinc-700 mb-3" />
+            <h3 className="text-sm font-medium text-zinc-400">No {statusFilter?.toLowerCase()} applications</h3>
+            <p className="text-zinc-600 mt-0.5 text-xs max-w-sm">
+              No applications match this filter. Try a different status to see more results.
             </p>
-          </motion.div>
+            <button
+              onClick={() => router.push("/applications")}
+              className="mt-4 h-9 px-4 rounded bg-zinc-800 text-zinc-300 text-xs font-medium hover:bg-zinc-700 transition-all"
+            >
+              Clear Filters
+            </button>
+          </div>
         ) : (
-          <div className="grid gap-3">
-            <AnimatePresence>
-              {filtered.map((app, index) => (
-                <motion.div 
-                  key={app.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  whileHover={{ scale: 1.005, borderColor: "rgba(124, 58, 237, 0.3)" }}
-                  className="group flex flex-col md:flex-row items-center justify-between p-4 rounded-2xl bg-zinc-950 border border-zinc-800 transition-all"
-                >
-                  <div className="flex items-center gap-4 w-full md:w-auto">
-                    <motion.div 
-                      whileHover={{ rotate: 10 }}
-                      className="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center"
-                    >
-                      <Building2 className="w-5 h-5 text-zinc-500" />
-                    </motion.div>
-                    <div>
-                      <h3 className="font-medium text-sm cursor-pointer hover:text-zinc-200 transition-colors" onClick={() => setSelectedCompany(app.company)}>{app.company?.company_name || "Company"}</h3>
-                      <p className="text-zinc-500 text-xs flex items-center gap-1.5 mt-0.5">
-                        <Briefcase className="w-3 h-3" />
-                        {app.company?.role || "Software Engineer"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-6 mt-3 md:mt-0 w-full md:w-auto justify-between md:justify-end">
-                    <div className="text-right">
-                      <p className="text-[10px] text-zinc-600 uppercase mb-0.5 font-medium">Applied Date</p>
-                      <p className="text-xs text-zinc-400">{format(new Date(app.applied_at), "MMM d, yyyy")}</p>
-                    </div>
-                    
-                    <div className="min-w-[100px] flex justify-end">
-                      {getStatusBadge(app.status)}
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-zinc-800/40">
+                  <th className="text-left text-[11px] text-zinc-600 font-medium pb-2 pr-4">Company</th>
+                  <th className="text-left text-[11px] text-zinc-600 font-medium pb-2 pr-4">Role</th>
+                  <th className="text-left text-[11px] text-zinc-600 font-medium pb-2 pr-4">Applied</th>
+                  <th className="text-right text-[11px] text-zinc-600 font-medium pb-2">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((app) => (
+                  <tr 
+                    key={app.id}
+                    className="border-b border-zinc-800/20 hover:bg-white/[0.02] transition-colors cursor-pointer"
+                    onClick={() => setSelectedCompany(app.company)}
+                  >
+                    <td className="py-2.5 pr-4">
+                      <div className="flex items-center gap-2.5">
+                        <CompanyLogo name={app.company?.company_name || "Company"} size="sm" />
+                        <span className="text-sm text-zinc-300">{app.company?.company_name}</span>
+                      </div>
+                    </td>
+                    <td className="py-2.5 pr-4 text-sm text-zinc-500">{app.company?.role}</td>
+                    <td className="py-2.5 pr-4 text-xs text-zinc-600">{format(new Date(app.applied_at), "MMM d, yyyy")}</td>
+                    <td className="py-2.5 text-right">
+                      <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${getStatusColor(app.status)}`}>
+                        {app.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
 
-      <AnimatePresence>
-        {selectedCompany && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-            onClick={() => setSelectedCompany(null)}
+      {selectedCompany && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          onClick={() => setSelectedCompany(null)}
+        >
+          <div
+            className="relative w-full max-w-md p-5 rounded-lg bg-layer-2 border border-zinc-800/60 shadow-elevated"
+            onClick={e => e.stopPropagation()}
           >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="relative w-full max-w-md p-6 rounded-2xl bg-zinc-950 border border-zinc-800 shadow-2xl"
-              onClick={e => e.stopPropagation()}
-            >
-              <button onClick={() => setSelectedCompany(null)} className="absolute top-4 right-4 p-1 rounded-lg hover:bg-zinc-800 transition-colors">
-                <X className="w-4 h-4 text-zinc-500" />
-              </button>
+            <button onClick={() => setSelectedCompany(null)} className="absolute top-3 right-3 p-1 rounded hover:bg-zinc-800 transition-colors">
+              <X className="w-3.5 h-3.5 text-zinc-500" />
+            </button>
 
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center">
-                  <Building2 className="w-5 h-5 text-zinc-400" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-semibold">{selectedCompany.company_name}</h2>
-                  <p className="text-sm text-zinc-500">{selectedCompany.role}</p>
-                </div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-9 h-9 rounded bg-zinc-900 flex items-center justify-center">
+                <Building2 className="w-4 h-4 text-zinc-400" />
               </div>
+              <div>
+                <h2 className="text-sm font-medium">{selectedCompany.company_name}</h2>
+                <p className="text-xs text-zinc-500">{selectedCompany.role}</p>
+              </div>
+            </div>
 
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 rounded-xl bg-zinc-900">
-                  <div className="flex items-center gap-2 text-sm text-zinc-400">
-                    <DollarSign className="w-4 h-4" />
-                    <span>Package</span>
-                  </div>
-                  <span className="text-sm font-medium text-zinc-200">{selectedCompany.package}</span>
+            <div className="space-y-2 text-xs">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-zinc-500">
+                  <DollarSign className="w-3.5 h-3.5" />
+                  <span>Package</span>
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-zinc-900">
-                  <div className="flex items-center gap-2 text-sm text-zinc-400">
-                    <GraduationCap className="w-4 h-4" />
-                    <span>Min CGPA</span>
-                  </div>
-                  <span className="text-sm font-medium text-zinc-200">{selectedCompany.min_cgpa}</span>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-zinc-900">
-                  <div className="flex items-center gap-2 text-sm text-zinc-400">
-                    <Users className="w-4 h-4" />
-                    <span>Departments</span>
-                  </div>
-                  <span className="text-sm font-medium text-zinc-200">{selectedCompany.eligible_departments}</span>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-zinc-900">
-                  <div className="flex items-center gap-2 text-sm text-zinc-400">
-                    <Calendar className="w-4 h-4" />
-                    <span>Deadline</span>
-                  </div>
-                  <span className="text-sm font-medium text-zinc-200">{format(new Date(selectedCompany.deadline), "MMM d, yyyy")}</span>
-                </div>
+                <span className="font-medium text-zinc-300">{selectedCompany.package}</span>
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-zinc-500">
+                  <GraduationCap className="w-3.5 h-3.5" />
+                  <span>Min CGPA</span>
+                </div>
+                <span className="font-medium text-zinc-300">{selectedCompany.min_cgpa}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-zinc-500">
+                  <Users className="w-3.5 h-3.5" />
+                  <span>Departments</span>
+                </div>
+                <span className="font-medium text-zinc-300">{selectedCompany.eligible_departments}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-zinc-500">
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>Deadline</span>
+                </div>
+                <span className="font-medium text-zinc-300">{format(new Date(selectedCompany.deadline), "MMM d, yyyy")}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

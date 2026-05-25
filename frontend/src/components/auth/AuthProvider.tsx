@@ -63,7 +63,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="h-screen w-screen bg-zinc-950 flex flex-col items-center justify-center gap-6"
+        className="h-screen w-screen bg-layer-1 flex flex-col items-center justify-center gap-6"
       >
         <div className="relative">
             <motion.div 
@@ -76,7 +76,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
         <motion.p 
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ repeat: Infinity, duration: 2 }}
-          className="text-[10px] font-semibold uppercase tracking-[0.4em] text-zinc-600"
+          className="text-xs text-muted-foreground"
         >
           Authenticating Session
         </motion.p>
@@ -89,7 +89,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="h-screen w-screen bg-zinc-950 flex flex-col items-center justify-center gap-6"
+        className="h-screen w-screen bg-layer-1 flex flex-col items-center justify-center gap-6"
       >
         <div className="relative">
             <motion.div 
@@ -102,7 +102,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
         <motion.p 
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ repeat: Infinity, duration: 2 }}
-          className="text-[10px] font-semibold uppercase tracking-[0.4em] text-zinc-600"
+          className="text-xs text-muted-foreground"
         >
           Authenticating Session
         </motion.p>

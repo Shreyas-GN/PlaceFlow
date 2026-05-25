@@ -69,3 +69,20 @@ class AuthService:
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         return user
+
+    @staticmethod
+    def change_password(db: Session, user: Student, current_password: str, new_password: str):
+        if not verify_password(current_password, user.password_hash):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Current password is incorrect"
+            )
+        if len(new_password) < 6:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="New password must be at least 6 characters"
+            )
+        user.password_hash = get_password_hash(new_password)
+        db.add(user)
+        db.commit()
+        return {"detail": "Password updated successfully"}

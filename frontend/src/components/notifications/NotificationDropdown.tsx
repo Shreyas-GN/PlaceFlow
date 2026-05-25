@@ -53,7 +53,7 @@ export default function NotificationDropdown() {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0 }}
-              className="absolute top-2 right-2 w-4 h-4 bg-primary text-[10px] font-black text-primary-foreground rounded-full flex items-center justify-center ring-4 ring-[#050505]"
+              className="absolute top-2 right-2 w-4 h-4 bg-primary text-[10px] font-semibold text-primary-foreground rounded-full flex items-center justify-center ring-4 ring-[#050505]"
             >
               {unreadCount > 9 ? '!' : unreadCount}
             </motion.span>
@@ -73,12 +73,12 @@ export default function NotificationDropdown() {
             <div className="p-8 border-b border-white/5 flex items-center justify-between bg-white/[0.01]">
               <div className="flex items-center gap-3">
                 <ShieldAlert className="w-5 h-5 text-primary" />
-                <h3 className="text-lg font-black tracking-tighter uppercase tracking-widest">Signals</h3>
+                <h3 className="text-lg font-medium">Signals</h3>
               </div>
               {unreadCount > 0 && (
                 <button 
                   onClick={() => markAllAsRead()}
-                  className="text-[10px] font-black text-primary uppercase tracking-widest hover:bg-primary/10 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-2"
+                  className="text-xs text-muted-foreground hover:bg-primary/10 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-2"
                 >
                   <Check className="w-3 h-3" /> Mark all read
                 </button>
@@ -89,16 +89,16 @@ export default function NotificationDropdown() {
             <div className="max-h-[32rem] overflow-y-auto scrollbar-hide">
               {isLoading && notifications.length === 0 ? (
                 <div className="p-12 text-center space-y-6">
-                  <div className="w-12 h-12 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto shadow-[0_0_15px_rgba(124,58,237,0.3)]" />
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Synchronizing Infrastructure...</p>
+                  <div className="w-12 h-12 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+                  <p className="text-xs text-muted-foreground">Synchronizing Infrastructure...</p>
                 </div>
               ) : notifications.length === 0 ? (
                 <div className="p-16 text-center">
                   <div className="w-20 h-20 bg-white/5 rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-inner">
                     <Bell className="w-8 h-8 text-slate-800" />
                   </div>
-                  <p className="text-sm font-bold text-slate-400">Zero active alerts</p>
-                  <p className="text-[10px] uppercase font-black tracking-widest text-slate-600 mt-2">All sectors clear</p>
+                  <p className="text-sm text-zinc-400">All caught up</p>
+                  <p className="text-xs text-muted-foreground mt-2">No new notifications</p>
                 </div>
               ) : (
                 <div className="divide-y divide-white/5">
@@ -118,7 +118,7 @@ export default function NotificationDropdown() {
                     >
                       <div className="flex gap-6">
                         <div className={cn(
-                          "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border transition-all duration-500 shadow-inner",
+                          "w-12 h-12 rounded-lg flex items-center justify-center shrink-0 border transition-all duration-500 shadow-inner",
                           !notif.is_read ? "bg-white/5 border-primary/20 scale-110" : "bg-white/[0.01] border-white/5"
                         )}>
                           {getIcon(notif.title)}
@@ -126,23 +126,23 @@ export default function NotificationDropdown() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-4 mb-1">
                             <p className={cn(
-                              "text-sm font-black tracking-tight truncate",
+                              "text-sm font-medium truncate",
                               !notif.is_read ? "text-slate-100" : "text-slate-500"
                             )}>
                               {notif.title}
                             </p>
-                            <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter shrink-0 flex items-center gap-1.5">
+                            <span className="text-xs text-muted-foreground shrink-0 flex items-center gap-1.5">
                               <Clock className="w-2.5 h-2.5" />
                               {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true })}
                             </span>
                           </div>
-                          <p className="text-xs text-slate-500 leading-relaxed font-medium line-clamp-2 italic">
+                          <p className="text-sm text-slate-500 leading-relaxed font-medium line-clamp-2 italic">
                             "{notif.message}"
                           </p>
                         </div>
                         {!notif.is_read && (
                           <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                            <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_rgba(124,58,237,0.5)]" />
+                            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                           </div>
                         )}
                       </div>
@@ -155,8 +155,8 @@ export default function NotificationDropdown() {
             {/* Footer */}
             <div className="p-6 border-t border-white/5 bg-white/[0.01] text-center">
               <div className="flex items-center justify-center gap-2">
-                <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
-                <p className="text-[9px] font-black text-slate-600 uppercase tracking-[0.3em]">
+                <div className="w-1 h-1 rounded-full bg-emerald-500" />
+                <p className="text-xs text-muted-foreground">
                    Operational Stream Active
                 </p>
               </div>

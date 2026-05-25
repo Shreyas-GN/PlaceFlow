@@ -45,8 +45,8 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-6 relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-full h-full bg-primary/5 blur-[120px] -z-10 rounded-full translate-y-[-50%]" />
+    <div className="min-h-screen bg-layer-1 flex items-center justify-center p-6 relative overflow-hidden">
+
       
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
@@ -56,14 +56,14 @@ export default function RegisterPage() {
         <div className="text-center mb-8">
           <motion.div 
             whileHover={{ rotate: 10 }}
-            className="inline-flex items-center gap-2 font-bold text-2xl tracking-tight mb-4"
+            className="inline-flex items-center gap-2 font-semibold text-2xl mb-4"
           >
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+            <div className="w-10 h-10 rounded-md bg-primary flex items-center justify-center">
               <GraduationCap className="w-6 h-6 text-primary-foreground" />
             </div>
-            <span className="bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">PlaceFlow</span>
+            <span className="text-white">PlaceFlow</span>
           </motion.div>
-          <h1 className="text-2xl font-bold tracking-tight">Create an account</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Create an account</h1>
           <p className="text-zinc-500 mt-1 text-sm">Join the placement coordination platform</p>
         </div>
 
@@ -71,47 +71,47 @@ export default function RegisterPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-zinc-950 border border-zinc-800 rounded-2xl p-8"
+          className="bg-layer-2 border border-zinc-800/60 rounded-2xl p-8 shadow-elevated"
         >
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Full Name</label>
+              <label className="text-xs font-medium text-zinc-500">Full Name</label>
               <input
                 type="text"
                 required
                 value={formData.full_name}
                 onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
                 placeholder="John Doe"
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-zinc-700"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-zinc-700"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Email</label>
+              <label className="text-xs font-medium text-zinc-500">Email</label>
               <input
                 type="email"
                 required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="john@university.edu"
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-zinc-700"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-zinc-700"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Department</label>
+                <label className="text-xs font-medium text-zinc-500">Department</label>
                 <input
                   type="text"
                   required
                   value={formData.department}
                   onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                   placeholder="CSE"
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-zinc-700"
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-zinc-700"
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">CGPA</label>
+                <label className="text-xs font-medium text-zinc-500">CGPA</label>
                 <input
                   type="number"
                   step="0.01"
@@ -119,20 +119,20 @@ export default function RegisterPage() {
                   value={formData.cgpa}
                   onChange={(e) => setFormData({ ...formData, cgpa: e.target.value })}
                   placeholder="9.5"
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-zinc-700"
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-zinc-700"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Password</label>
+              <label className="text-xs font-medium text-zinc-500">Password</label>
               <input
                 type="password"
                 required
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 placeholder="••••••••"
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-zinc-700"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-zinc-700"
               />
             </div>
 
@@ -141,7 +141,7 @@ export default function RegisterPage() {
               whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={isLoading}
-              className="w-full h-12 bg-white text-black rounded-xl font-semibold flex items-center justify-center gap-2 text-sm hover:bg-primary hover:text-white transition-all disabled:opacity-50 mt-2"
+              className="w-full h-12 bg-white text-black rounded-md font-semibold flex items-center justify-center gap-2 text-sm hover:bg-primary hover:text-white transition-all disabled:opacity-50 mt-2"
             >
               {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
               {isLoading ? "Creating account..." : (

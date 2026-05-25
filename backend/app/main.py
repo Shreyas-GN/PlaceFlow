@@ -6,6 +6,8 @@ from app.api.admin import router as admin_router
 from app.api.companies import router as company_router
 from app.api.applications import router as application_router
 from app.api.notifications import router as notification_router
+from app.api.audit import router as audit_router
+from app.api.search import router as search_router
 from app.db.session import engine
 
 app = FastAPI(title="PlaceFlow API")
@@ -32,6 +34,8 @@ app.include_router(admin_router)
 app.include_router(company_router)
 app.include_router(application_router)
 app.include_router(notification_router)
+app.include_router(audit_router)
+app.include_router(search_router)
 
 @app.get("/")
 def root():

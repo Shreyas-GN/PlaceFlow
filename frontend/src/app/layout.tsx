@@ -8,8 +8,8 @@ import AuthProvider from "@/components/auth/AuthProvider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "PlaceFlow — Campus Placement Platform",
-  description: "Modern campus placement coordination platform. Automated eligibility, real-time tracking, and seamless communication.",
+  title: "PlaceFlow — The operating system for campus placements",
+  description: "Run campus placements without spreadsheets, WhatsApp chaos, or manual tracking. PlaceFlow gives students, placement coordinators, and recruiters a single operational workspace.",
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
@@ -24,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} bg-zinc-950 text-white antialiased`}>
+      <body className={`${inter.className} bg-layer-1 text-white antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
           <AuthProvider>
             {children}

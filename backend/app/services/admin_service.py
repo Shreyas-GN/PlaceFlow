@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordBearer
 from app.models.admin import Admin
-from app.schemas.admin import AdminCreate, AdminLogin
+from app.schemas.admin import AdminCreate, AdminLogin, ChangePassword
 from app.core.security import get_password_hash, verify_password, create_access_token, decode_token
 from app.services.auth_service import get_db
 
@@ -38,6 +38,19 @@ class AdminService:
         
         access_token = create_access_token(subject=admin.email, role="admin")
         return {"access_token": access_token, "token_type": "bearer"}
+
+    @staticmethod
+    def change_password(db: Session, admin: Admin, passwords: ChangePassword):
+        if not verify_password(passwords.current_password, admin.password_hash):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Current password is incorrect",
+            )
+        
+        admin.password_hash = get_password_hash(passwords.new_password)
+        db.commit()
+        db.refresh(admin)
+        return {"detail": "Password changed successfully"}
 
     @staticmethod
     def get_current_admin(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):

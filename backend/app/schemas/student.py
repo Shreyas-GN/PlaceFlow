@@ -22,3 +22,7 @@ class StudentUpdate(BaseModel):
     full_name: Optional[str] = None
     department: Optional[str] = None
     cgpa: Optional[float] = None
+
+class ChangePassword(BaseModel):
+    current_password: str
+    new_password: str

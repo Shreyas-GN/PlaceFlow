@@ -10,7 +10,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-zinc-950 text-white">
+    <div className="flex h-screen bg-layer-1 text-white">
       {/* Desktop Sidebar */}
       <div className="hidden lg:block h-full shrink-0">
         <Sidebar />
@@ -32,19 +32,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 left-0 w-64 z-[100]"
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="fixed inset-y-0 left-0 w-52 z-[100]"
             >
               <Sidebar />
-              <motion.button 
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0 }}
+              <button 
                 onClick={() => setIsSidebarOpen(false)}
-                className="absolute top-5 right-[-44px] w-9 h-9 bg-zinc-950 border border-zinc-800 rounded-full flex items-center justify-center text-white shadow-2xl"
+                className="absolute top-5 right-[-44px] w-9 h-9 bg-layer-3 border border-zinc-800/60 rounded-full flex items-center justify-center text-white shadow-elevated"
               >
                 <X className="w-4 h-4" />
-              </motion.button>
+              </button>
             </motion.div>
           </>
         )}
@@ -52,9 +49,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       <div className="flex-1 flex flex-col min-w-0">
         <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
-        <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
+        <main className="flex-1 overflow-y-auto bg-layer-1 p-3 sm:p-4 md:p-5">
           <motion.div
-            key={isSidebarOpen ? 'open' : 'closed'}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.15 }}

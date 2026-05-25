@@ -7,6 +7,7 @@ from app.services.application_service import ApplicationService
 from app.services.auth_service import AuthService, get_db
 from app.services.admin_service import AdminService
 from app.models.student import Student
+from app.models.admin import Admin
 
 router = APIRouter(prefix="/applications", tags=["applications"])
 
@@ -29,7 +30,6 @@ def get_my_applications(
 ):
     return ApplicationService.get_student_applications(db, current_user.id)
 
-# Admin-only: view all applications
 @router.get("/all")
 def get_all_applications(
     db: Session = Depends(get_db),
@@ -37,13 +37,12 @@ def get_all_applications(
 ):
     return ApplicationService.get_all_applications(db)
 
-# Admin-only: update application status
 @router.patch("/{application_id}/status")
 def update_status(
     application_id: str,
     body: StatusUpdate,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
-    current_admin = Depends(AdminService.get_current_admin)
+    current_admin: Admin = Depends(AdminService.get_current_admin)
 ):
-    return ApplicationService.update_application_status(db, application_id, body.status, background_tasks)
+    return ApplicationService.update_application_status(db, application_id, body.status, background_tasks, admin=current_admin)

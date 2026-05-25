@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.schemas.admin import AdminCreate, AdminLogin, AdminResponse
+from app.schemas.admin import AdminCreate, AdminLogin, AdminResponse, ChangePassword
 from app.schemas.auth import Token
 from app.services.admin_service import AdminService
 from app.services.auth_service import get_db
@@ -18,3 +18,11 @@ def login_admin(login_data: AdminLogin, db: Session = Depends(get_db)):
 @router.get("/me", response_model=AdminResponse)
 def get_me(current_admin = Depends(AdminService.get_current_admin)):
     return current_admin
+
+@router.put("/me/password")
+def change_password(
+    passwords: ChangePassword,
+    db: Session = Depends(get_db),
+    current_admin = Depends(AdminService.get_current_admin)
+):
+    return AdminService.change_password(db, current_admin, passwords)

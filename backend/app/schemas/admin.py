@@ -14,6 +14,10 @@ class AdminLogin(BaseModel):
     email: EmailStr
     password: str
 
+class ChangePassword(BaseModel):
+    current_password: str
+    new_password: str
+
 class AdminResponse(AdminBase):
     id: UUID
     created_at: datetime

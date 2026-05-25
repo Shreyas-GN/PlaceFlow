@@ -52,4 +52,34 @@ export const adminService = {
     const response = await api.get('/companies/');
     return response.data;
   },
+
+  async updateCompany(id: string, data: {
+    company_name?: string;
+    role?: string;
+    package?: string;
+    min_cgpa?: number;
+    eligible_departments?: string;
+    deadline?: string;
+  }) {
+    const response = await api.put(`/companies/${id}`, data);
+    return response.data;
+  },
+
+  async changePassword(currentPassword: string, newPassword: string) {
+    const response = await api.put('/admin/me/password', {
+      current_password: currentPassword,
+      new_password: newPassword
+    });
+    return response.data;
+  },
+
+  async closeDrive(companyId: string) {
+    const response = await api.post(`/companies/${companyId}/close`);
+    return response.data;
+  },
+
+  async getDriveCloseConsequences(companyId: string) {
+    const response = await api.get(`/companies/${companyId}/close-consequences`);
+    return response.data;
+  },
 };

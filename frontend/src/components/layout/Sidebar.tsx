@@ -2,32 +2,33 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { 
-  LayoutDashboard, 
-  Briefcase, 
+import {
+  LayoutDashboard,
+  Briefcase,
   Building2,
-  Settings, 
+  Settings,
   LogOut,
   GraduationCap,
-  ChevronRight
+  Clock,
+  FileText,
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
+import { useMemoryStore } from "@/store/memory.store";
 import { toast } from "sonner";
-
-import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Companies', href: '/companies', icon: Building2 },
-  { name: 'My Applications', href: '/applications', icon: Briefcase },
-  { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Companies", href: "/companies", icon: Building2 },
+  { name: "My Applications", href: "/applications", icon: Briefcase },
+  { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const logout = useAuthStore((state) => state.logout);
+  const memory = useMemoryStore();
 
   const handleLogout = () => {
     logout();
@@ -36,87 +37,87 @@ export default function Sidebar() {
   };
 
   return (
-    <motion.div 
-      initial={{ x: -20, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-      className="flex h-full w-64 flex-col bg-zinc-950 border-r border-zinc-800 relative z-20"
-    >
-      <div className="flex h-16 items-center px-5 border-b border-zinc-800">
-        <Link href="/dashboard" className="flex items-center gap-2.5 font-bold text-xl tracking-tight group">
-          <motion.div 
-            whileHover={{ rotate: 15, scale: 1.1 }}
-            transition={{ type: "spring", stiffness: 300, damping: 10 }}
-            className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20"
-          >
-            <GraduationCap className="w-5 h-5 text-primary-foreground" />
-          </motion.div>
-          <span className="bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">PlaceFlow</span>
+    <div className="flex h-full w-52 flex-col bg-layer-2 border-r border-zinc-800/60 relative z-20">
+      {/* Brand */}
+      <div className="flex h-12 items-center px-3 border-b border-zinc-800/40">
+        <Link href="/dashboard" className="flex items-center gap-2 group">
+          <div className="w-6 h-6 rounded bg-primary flex items-center justify-center">
+            <GraduationCap className="w-3 h-3 text-primary-foreground" />
+          </div>
+          <span className="font-semibold text-sm tracking-tight text-foreground">PlaceFlow</span>
         </Link>
       </div>
-      
-      <nav className="flex-1 space-y-1 px-3 py-6">
-        <p className="px-3 text-[10px] font-semibold text-zinc-600 uppercase tracking-widest mb-3">Main Menu</p>
+
+      {/* Navigation */}
+      <nav className="space-y-0.5 px-1.5 py-3">
         {navigation.map((item) => {
           const isActive = pathname === item.href;
           return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className="relative block"
-            >
-              <motion.div
-                whileHover={{ x: 3 }}
-                whileTap={{ scale: 0.98 }}
+            <Link key={item.name} href={item.href}>
+              <div
                 className={cn(
-                  "group flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium rounded-xl transition-all relative z-10",
-                  isActive 
-                    ? "text-primary" 
+                  "flex items-center gap-2.5 px-2 py-1 text-xs relative rounded hover:bg-zinc-800/30 transition-colors",
+                  isActive
+                    ? "text-zinc-200 font-medium bg-zinc-800/20"
                     : "text-zinc-500 hover:text-zinc-300"
                 )}
               >
-                <item.icon className={cn("w-4 h-4 transition-all", isActive && "text-primary")} />
+                {isActive && (
+                  <div className="absolute inset-y-1 left-0 w-[2px] bg-primary rounded-r" />
+                )}
+                <item.icon className="w-3.5 h-3.5 shrink-0" />
                 <span>{item.name}</span>
-                
-                {isActive && (
-                  <motion.div 
-                    layoutId="activeNav"
-                    className="absolute inset-0 bg-primary/10 border border-primary/20 rounded-xl -z-10"
-                    transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
-                  />
-                )}
-
-                {isActive && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="ml-auto"
-                  >
-                    <ChevronRight className="w-3.5 h-3.5 text-primary" />
-                  </motion.div>
-                )}
-              </motion.div>
+              </div>
             </Link>
           );
         })}
       </nav>
 
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="p-4 border-t border-zinc-800 bg-zinc-900/30"
-      >
-        <motion.button 
-          whileHover={{ scale: 1.01, x: 2 }}
-          whileTap={{ scale: 0.98 }}
+      {/* System Memory — Resume context */}
+      {memory.lastOpenedDriveName && (
+        <div className="px-3 py-2 mx-1.5 mb-1 rounded-lg bg-zinc-800/20 border border-zinc-800/40">
+          <div className="flex items-center gap-1.5 mb-1">
+            <Clock className="w-2.5 h-2.5 text-zinc-600" />
+            <span className="text-[10px] text-zinc-600 uppercase tracking-[0.08em] font-semibold">
+              Continue
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <FileText className="w-3 h-3 text-primary shrink-0" />
+            <span className="text-[11px] text-zinc-400 truncate">{memory.lastOpenedDriveName}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Recent activity */}
+      <div className="px-3 py-1.5 mx-1.5 mb-1">
+        <div className="flex items-center gap-1.5 mb-1">
+          <Clock className="w-2.5 h-2.5 text-zinc-600" />
+          <span className="text-[10px] text-zinc-600 uppercase tracking-[0.08em] font-semibold">
+            Recent
+          </span>
+        </div>
+        {memory.recentActivities.slice(0, 3).map((a) => (
+          <div key={a.id} className="flex items-center gap-1.5 py-0.5">
+            <div className="w-1 h-1 rounded-full bg-zinc-700 shrink-0" />
+            <span className="text-[10px] text-zinc-500 truncate">{a.label}</span>
+          </div>
+        ))}
+        {memory.recentActivities.length === 0 && (
+          <p className="text-[10px] text-zinc-600">No recent activity</p>
+        )}
+      </div>
+
+      {/* User + Sign Out */}
+      <div className="mt-auto p-2 border-t border-zinc-800/40">
+        <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-2.5 px-3 py-2.5 text-sm font-medium rounded-xl text-rose-500/80 hover:text-rose-500 hover:bg-rose-500/10 transition-all"
+          className="flex w-full items-center gap-2.5 px-2 py-1 text-xs text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors rounded"
         >
-          <LogOut className="w-4 h-4" />
+          <LogOut className="w-3 h-3" />
           Sign Out
-        </motion.button>
-      </motion.div>
-    </motion.div>
+        </button>
+      </div>
+    </div>
   );
 }

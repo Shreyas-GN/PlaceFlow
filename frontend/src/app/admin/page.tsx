@@ -1,253 +1,624 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, startTransition } from "react";
 import Link from "next/link";
-import { 
-  Users, 
-  Building2, 
-  CheckCircle2, 
-  Clock, 
-  ArrowUpRight,
-  Plus,
-  ShieldCheck,
-  Zap
+import { useRouter } from "next/navigation";
+import {
+  Users, Building2, ChevronRight,
+  AlertCircle, RefreshCw, Archive,
+  Timer, Download,
 } from "lucide-react";
 import { adminService } from "@/services/admin.service";
 import { toast } from "sonner";
-import { format } from "date-fns";
-import { motion, AnimatePresence } from "framer-motion";
+import { format, formatDistanceToNow, subDays } from "date-fns";
 import { Skeleton } from "@/components/shared/Skeleton";
+import { getStatusColor, FRICTION_STATES, FrictionBadge } from "@/lib/status";
+import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
+
+import { ActivityStream, generateMockActivity } from "@/components/shared/ActivityStream";
+import { SyncIndicator, AutoSaveIndicator, Timestamp } from "@/components/shared/SystemFeedback";
+import { InterviewPipeline, PIPELINE_STAGES, CompactPipelineStages } from "@/components/shared/InterviewPipeline";
+import { OfferTracker, OfferSummaryBar } from "@/components/shared/OfferTracker";
+import { EligibilityMatrix, CompactEligibilityGrid } from "@/components/shared/EligibilityMatrix";
+import { useMemoryStore } from "@/store/memory.store";
+import {
+  ArchivedDrivesBar,
+  ExpiringRecords,
+  NotificationOverflow,
+  CrowdedTimeline,
+  StatusDistribution,
+  DelayedActions,
+  useOperationalWear,
+} from "@/components/shared/OperationalWear";
+import { ConversionFunnel, FunnelMetrics } from "@/components/shared/ConversionFunnel";
+import { RoleTensionCard } from "@/components/shared/RoleTension";
+import { SeasonalityIndicator, ActiveDriveCountdown } from "@/components/shared/SeasonalityIndicator";
+import { SystemNotices, ExportButton, useSystemNotices } from "@/components/shared/SystemNotices";
+
+interface AdminStudent {
+  id: string;
+  full_name: string;
+  email: string;
+  department: string;
+  cgpa: number;
+}
+
+interface AdminCompany {
+  id: string;
+  company_name: string;
+  role: string;
+  package: string;
+  min_cgpa: number;
+  eligible_departments: string;
+  deadline: string;
+  created_at: string;
+}
+
+interface AdminApplication {
+  id: string;
+  student_id: string;
+  company_id: string;
+  status: string;
+  applied_at: string;
+  student?: AdminStudent;
+  company?: AdminCompany;
+}
+
+const PLACEMENT_COORDINATORS = [
+  "Dr. Ananya Verma",
+  "Prof. Rajesh Nair",
+  "Dr. Sneha Gupta",
+  "Prof. Arjun Rao",
+  "Ms. Priya Kulkarni",
+];
+
+const RECRUITER_NAMES = [
+  "Rahul Mehta (Adobe)",
+  "Ananya Krishnan (Amazon)",
+  "Siddharth Patel (Google)",
+  "Vikram Iyer (Goldman Sachs)",
+  "Kavita Joshi (JP Morgan)",
+  "Priya Sharma (Microsoft)",
+  "Arun Nair (Flipkart)",
+];
+
+type DashboardPhase = "loading" | "ready";
 
 export default function AdminDashboard() {
+  const router = useRouter();
+  const wear = useOperationalWear();
+  const memory = useMemoryStore();
+
   const [stats, setStats] = useState({
     totalApplicants: 0,
     activeDrives: 0,
     selectedStudents: 0,
-    pendingReviews: 0
+    pendingReviews: 0,
   });
-  const [recentApplications, setRecentApplications] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [recentApplications, setRecentApplications] = useState<AdminApplication[]>([]);
+  const [phase, setPhase] = useState<DashboardPhase>("loading");
+  const [lastSynced, setLastSynced] = useState<Date>(new Date());
+  const [syncing, setSyncing] = useState(false);
+  const [lastAutoSave, setLastAutoSave] = useState<Date | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const mockActivity = useMemo(() => generateMockActivity(), []);
+  const systemNotices = useSystemNotices();
 
   useEffect(() => {
-    loadDashboardData();
+    startTransition(async () => {
+      try {
+        const [apps, companies] = await Promise.all([
+          adminService.getAllApplications() as Promise<AdminApplication[]>,
+          adminService.getAllCompanies(),
+        ]);
+        setRecentApplications(apps.slice(0, 20));
+        setStats({
+          totalApplicants: apps.length,
+          activeDrives: (companies as AdminCompany[]).length,
+          selectedStudents: apps.filter((a) => a.status === "Selected").length,
+          pendingReviews: apps.filter((a) => a.status === "Applied").length,
+        });
+        setLastSynced(new Date());
+        setPhase("ready");
+      } catch {
+        toast.error("Failed to load dashboard data");
+        setPhase("ready");
+      }
+    });
   }, []);
 
-  const loadDashboardData = async () => {
-    setIsLoading(true);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLastSynced(new Date());
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const interviewStage = useMemo(
+    () => recentApplications.filter((a) => a.status === "Interview").length,
+    [recentApplications]
+  );
+
+  const shortlisted = useMemo(
+    () => recentApplications.filter((a) => a.status === "Shortlisted").length,
+    [recentApplications]
+  );
+
+  const stageCounts = useMemo(() => ({
+    Applied: recentApplications.filter((a) => a.status === "Applied").length,
+    Screening: recentApplications.filter((a) => a.status === "Screening" || a.status === "Shortlisted").length,
+    Technical: recentApplications.filter((a) => a.status === "Technical" || a.status === "Interview").length,
+    HR: recentApplications.filter((a) => a.status === "HR").length,
+    Offer: recentApplications.filter((a) => a.status === "Selected" || a.status === "Offer").length,
+  }), [recentApplications]);
+
+  const funnelStages = useMemo(() => [
+    { key: "applied", label: "Applied", count: stageCounts.Applied, color: "bg-blue-500" },
+    { key: "screening", label: "Screening / Shortlisted", count: stageCounts.Screening, color: "bg-indigo-500" },
+    { key: "technical", label: "Technical / Interview", count: stageCounts.Technical, color: "bg-violet-500" },
+    { key: "hr", label: "HR Round", count: stageCounts.HR, color: "bg-pink-500" },
+    { key: "offer", label: "Offer / Selected", count: stageCounts.Offer, color: "bg-emerald-500" },
+  ], [stageCounts]);
+
+  const selectionRate =
+    stats.totalApplicants > 0
+      ? Math.round((stats.selectedStudents / stats.totalApplicants) * 100)
+      : 0;
+
+  const handleRefresh = async () => {
+    setSyncing(true);
     try {
       const [apps, companies] = await Promise.all([
-        adminService.getAllApplications(),
-        adminService.getAllCompanies()
+        adminService.getAllApplications() as Promise<AdminApplication[]>,
+        adminService.getAllCompanies(),
       ]);
-
-      setRecentApplications(apps.slice(0, 5));
-      
-      setStats({
-        totalApplicants: apps.length,
-        activeDrives: companies.length,
-        selectedStudents: apps.filter((a: any) => a.status === "Selected").length,
-        pendingReviews: apps.filter((a: any) => a.status === "Applied").length
+      startTransition(() => {
+        setRecentApplications(apps.slice(0, 20));
+        setStats({
+          totalApplicants: apps.length,
+          activeDrives: (companies as AdminCompany[]).length,
+          selectedStudents: apps.filter((a) => a.status === "Selected").length,
+          pendingReviews: apps.filter((a) => a.status === "Applied").length,
+        });
+        setLastSynced(new Date());
       });
-    } catch (error) {
-      toast.error("Failed to load dashboard data");
+      memory.addActivity({ type: "filter_applied", label: "Refreshed admin dashboard", path: "/admin" });
+    } catch {
+      toast.error("Failed to refresh dashboard data");
     } finally {
-      setIsLoading(false);
+      startTransition(() => setSyncing(false));
     }
   };
 
-  const statCards = [
-    { label: "Total Applicants", value: stats.totalApplicants, icon: Users, color: "text-blue-500", bg: "bg-blue-500/10" },
-    { label: "Active Drives", value: stats.activeDrives, icon: Building2, color: "text-purple-500", bg: "bg-purple-500/10" },
-    { label: "Placements", value: stats.selectedStudents, icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-    { label: "Pending Reviews", value: stats.pendingReviews, icon: Clock, color: "text-orange-500", bg: "bg-orange-500/10" },
-  ];
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Selected": return "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
-      case "Rejected": return "bg-rose-500/10 text-rose-500 border-rose-500/20";
-      case "Shortlisted": return "bg-blue-500/10 text-blue-500 border-blue-500/20";
-      case "Interview": return "bg-amber-500/10 text-amber-500 border-amber-500/20";
-      default: return "bg-slate-500/10 text-slate-400 border-white/5";
+  const commandItems = useMemo(() => {
+    const items: {
+      id: string;
+      label: string;
+      urgency: "high" | "medium" | "low";
+      action: string;
+      actionLabel: string;
+    }[] = [];
+    if (stats.pendingReviews > 0) {
+      items.push({
+        id: "review",
+        label: `${stats.pendingReviews} applicant${stats.pendingReviews !== 1 ? "s" : ""} pending recruiter review`,
+        urgency: "high",
+        action: "/admin/applicants?status=Applied",
+        actionLabel: "Review",
+      });
     }
-  };
+    if (shortlisted > 0) {
+      items.push({
+        id: "schedule",
+        label: `${shortlisted} student${shortlisted !== 1 ? "s" : ""} awaiting interview scheduling`,
+        urgency: "high",
+        action: "/admin/applicants?status=Shortlisted",
+        actionLabel: "Schedule",
+      });
+    }
+    if (stats.activeDrives === 0) {
+      items.push({
+        id: "create",
+        label: "No active placement drives — start one to begin collecting applications",
+        urgency: "medium",
+        action: "/admin/companies",
+        actionLabel: "Create Drive",
+      });
+    }
+    return items;
+  }, [stats.pendingReviews, shortlisted, stats.activeDrives]);
+
+  /* ── Simulate auto-save ── */
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsSaving(true);
+      setTimeout(() => {
+        setIsSaving(false);
+        setLastAutoSave(new Date());
+      }, 800);
+    }, 10000);
+    return () => clearTimeout(timer);
+  }, [lastAutoSave]);
+
+  if (phase === "loading") {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-7 w-48" />
+        <Skeleton className="h-8 w-full" />
+        <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-5">
+          <Skeleton className="h-96 w-full rounded-xl" />
+          <div className="space-y-5">
+            <Skeleton className="h-32 w-full rounded-xl" />
+            <Skeleton className="h-64 w-full rounded-xl" />
+            <Skeleton className="h-48 w-full rounded-xl" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <motion.div 
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col md:flex-row md:items-center justify-between gap-4"
+    <div className="space-y-5">
+      {/* ── System Status Bar ── */}
+      <motion.div
+        className="flex items-center justify-between"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
       >
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Admin Console</h1>
-          <p className="text-zinc-500 text-sm mt-0.5">Powering the next generation of placement workflows.</p>
-        </div>
+        <SyncIndicator
+          lastSynced={lastSynced}
+          isSyncing={syncing}
+          onRefresh={handleRefresh}
+        />
+        <AutoSaveIndicator lastSaved={lastAutoSave} isSaving={isSaving} />
       </motion.div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {statCards.map((stat, i) => (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: i * 0.1 }}
-            key={i} 
-            className="p-5 rounded-2xl bg-zinc-950 border border-zinc-800 hover:border-primary/30 transition-all group relative overflow-hidden"
+      {/* ── DENSITY VARIATION: Dense Left + Wide Right ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-5">
+
+        {/* ══════════ DENSE OPERATIONAL SIDEBAR ══════════ */}
+        <div className="space-y-3">
+          {/* Friction States */}
+          <div className="bg-layer-2 border border-zinc-800/40 rounded-xl p-3">
+            <div className="op-label text-zinc-500 mb-2">Active Frictions</div>
+            <div className="space-y-1.5">
+              {FRICTION_STATES.slice(0, 3).map((f) => (
+                <FrictionBadge key={f.type} state={f} />
+              ))}
+            </div>
+          </div>
+
+          {/* System Memory - Recent Activity */}
+          <div className="bg-layer-2 border border-zinc-800/40 rounded-xl p-3">
+            <div className="op-label text-zinc-500 mb-2">Recent</div>
+            <div className="space-y-1">
+              {memory.recentActivities.slice(0, 4).map((a) => (
+                <div key={a.id} className="flex items-center gap-1.5">
+                  <div className="w-1 h-1 rounded-full bg-zinc-700 shrink-0" />
+                  <span className="text-[11px] text-zinc-500 truncate">{a.label}</span>
+                </div>
+              ))}
+              {memory.recentActivities.length === 0 && (
+                <p className="text-[11px] text-zinc-600">No recent activity</p>
+              )}
+            </div>
+          </div>
+
+          {/* Quick Metrics (dense) */}
+          <div className="bg-layer-2 border border-zinc-800/40 rounded-xl p-3">
+            <div className="op-label text-zinc-500 mb-2">Metrics</div>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-zinc-500">Selection rate</span>
+                <span className="text-xs font-semibold text-zinc-300 tabular-nums">{selectionRate}%</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-zinc-500">Interview stage</span>
+                <span className="text-xs font-semibold text-zinc-300 tabular-nums">{interviewStage}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-zinc-500">Shortlisted</span>
+                <span className="text-xs font-semibold text-zinc-300 tabular-nums">{shortlisted}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Role Tension — conflicting stakeholder priorities */}
+          <div className="bg-layer-2 border border-zinc-800/40 rounded-xl p-3">
+            <RoleTensionCard activeConflict="officer" />
+          </div>
+
+          {/* Archived Drives + Notification Overflow */}
+          <ArchivedDrivesBar count={3} />
+          <NotificationOverflow total={47} unread={12} />
+
+          {/* Exports — institutional trust signals */}
+          <div className="bg-layer-2 border border-zinc-800/40 rounded-xl p-3">
+            <div className="op-label text-zinc-500 mb-2">Exports</div>
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-zinc-800/30 transition-colors cursor-pointer group">
+                <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                  <Download className="w-3 h-3 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[11px] text-zinc-400 group-hover:text-zinc-300 transition-colors">Applicant Data</p>
+                  <p className="text-[9px] text-zinc-600 tabular-nums">CSV · {stats.totalApplicants} records</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-zinc-800/30 transition-colors cursor-pointer group">
+                <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                  <Download className="w-3 h-3 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[11px] text-zinc-400 group-hover:text-zinc-300 transition-colors">Drive Report</p>
+                  <p className="text-[9px] text-zinc-600 tabular-nums">PDF · {stats.activeDrives} drives</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ══════════ WIDE MAIN CONTENT ══════════ */}
+        <div className="space-y-5 min-w-0">
+
+          {/* ── SPACIOUS HERO INSIGHT ── */}
+          <motion.div
+            className="bg-layer-2 border border-zinc-800/40 rounded-xl p-5"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
           >
-            <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-              <ArrowUpRight className="w-4 h-4 text-primary" />
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <h1 className="text-xl font-semibold tracking-tight">Admin Console</h1>
+                <p className="text-zinc-500 text-xs mt-0.5">
+                  Placement workflow management —{" "}
+                  <Timestamp date={lastSynced} prefix="Last activity" />
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-1.5 bg-zinc-800/30 border border-zinc-800/40 rounded-lg px-2.5 py-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/60" />
+                  <span className="text-[10px] font-medium text-emerald-500 uppercase tracking-[0.08em]">
+                    System Online
+                  </span>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center justify-between mb-4">
-              <motion.div 
-                whileHover={{ scale: 1.1 }}
-                className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center transition-transform group-hover:scale-110`}
-              >
-                <stat.icon className={`w-5 h-5 ${stat.color}`} />
-              </motion.div>
-            </div>
-            <div>
-              <p className="text-zinc-500 text-[10px] font-semibold uppercase tracking-wider mb-1">{stat.label}</p>
-              <div className="text-2xl font-bold tracking-tight">
-                {isLoading ? <Skeleton className="h-7 w-16" /> : stat.value}
+
+            {/* Command Center */}
+            {commandItems.length > 0 && (
+              <div className="mt-4 p-3 rounded-lg bg-zinc-800/20 border border-zinc-800/40">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertCircle className="w-3 h-3 text-primary" />
+                  <span className="op-label text-zinc-500">Requires Attention</span>
+                </div>
+                <div className="space-y-1">
+                  {commandItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center gap-2 px-3 py-1.5 rounded bg-zinc-800/30"
+                    >
+                      <div
+                        className={cn(
+                          "w-1.5 h-1.5 rounded-full shrink-0",
+                          item.urgency === "high" ? "bg-amber-500" : "bg-blue-500"
+                        )}
+                      />
+                      <span className="text-xs text-zinc-400 flex-1">{item.label}</span>
+                      <Link
+                        href={item.action}
+                        className="text-[11px] font-medium text-primary hover:text-primary/80 transition-colors shrink-0"
+                      >
+                        {item.actionLabel}
+                      </Link>
+                      <ChevronRight className="w-3 h-3 text-zinc-700 shrink-0" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Metrics bar */}
+            <div className="flex items-center gap-3 flex-wrap mt-4">
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-layer-3 border border-zinc-800/60">
+                <Users className="w-3 h-3 text-zinc-500" />
+                <span className="text-[12px] text-zinc-400">
+                  <strong className="text-zinc-200 tabular-nums">{stats.totalApplicants}</strong> applicants
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-layer-3 border border-zinc-800/60">
+                <Building2 className="w-3 h-3 text-zinc-500" />
+                <span className="text-[12px] text-zinc-400">
+                  <strong className="text-zinc-200 tabular-nums">{stats.activeDrives}</strong> active drives
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-layer-3 border border-zinc-800/60">
+                <Timer className="w-3 h-3 text-zinc-500" />
+                <span className="text-[12px] text-zinc-400">
+                  <strong className="text-zinc-200 tabular-nums">{stats.pendingReviews}</strong> awaiting review
+                </span>
               </div>
             </div>
           </motion.div>
-        ))}
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="lg:col-span-2 rounded-2xl bg-zinc-950 border border-zinc-800 overflow-hidden"
-        >
-          <div className="p-5 border-b border-zinc-800 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-primary" />
-              <h2 className="text-base font-semibold tracking-tight">Pending Approval</h2>
-            </div>
-            <Link href="/admin/applicants" className="text-primary text-[10px] font-semibold uppercase tracking-wider hover:underline">Full Report</Link>
+          {/* ── PIPELINE + DOMAIN COMPONENTS ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-5">
+            {/* Interview Pipeline (wide) */}
+            <motion.div
+              className="bg-layer-2 border border-zinc-800/40 rounded-xl p-4"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
+            >
+              <InterviewPipeline
+                currentStage={stageCounts.Offer > 0 ? "Offer" : stageCounts.HR > 0 ? "HR" : stageCounts.Technical > 0 ? "Technical" : stageCounts.Screening > 0 ? "Screening" : "Applied"}
+              />
+              <div className="mt-3 pt-3 border-t border-zinc-800/20">
+                <CompactPipelineStages currentStage="Applied" stageCounts={stageCounts} />
+              </div>
+            </motion.div>
+
+            {/* Offer Tracker */}
+            <motion.div
+              className="bg-layer-2 border border-zinc-800/40 rounded-xl p-4"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.08 }}
+            >
+              <OfferSummaryBar accepted={12} pending={5} declined={3} expiring={2} />
+              <div className="mt-3">
+                <OfferTracker
+                  offers={[
+                    { id: "1", company: "Adobe", role: "SDE-1", package: "24 LPA", status: "accepted" },
+                    { id: "2", company: "Amazon", role: "SDE-1", package: "32 LPA", status: "pending", daysLeft: 2 },
+                    { id: "3", company: "Google", role: "SWE Intern", package: "12 LPA", status: "expiring", daysLeft: 1 },
+                  ]}
+                />
+              </div>
+            </motion.div>
           </div>
-          
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="bg-zinc-900/50">
-                  <th className="px-5 py-4 text-[10px] font-semibold text-zinc-600 uppercase tracking-wider">Applicant</th>
-                  <th className="px-5 py-4 text-[10px] font-semibold text-zinc-600 uppercase tracking-wider">Target Entity</th>
-                  <th className="px-5 py-4 text-[10px] font-semibold text-zinc-600 uppercase tracking-wider">Submission</th>
-                  <th className="px-5 py-4 text-[10px] font-semibold text-zinc-600 uppercase tracking-wider">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-800">
-                {isLoading ? (
-                  [...Array(5)].map((_, i) => (
-                    <tr key={i}>
-                      <td className="px-5 py-4"><Skeleton className="h-8 w-36" /></td>
-                      <td className="px-5 py-4"><Skeleton className="h-4 w-20" /></td>
-                      <td className="px-5 py-4"><Skeleton className="h-3 w-16" /></td>
-                      <td className="px-5 py-4"><Skeleton className="h-6 w-16 rounded-full" /></td>
-                    </tr>
-                  ))
-                ) : recentApplications.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="px-5 py-16 text-center">
-                      <div className="flex flex-col items-center justify-center">
-                        <div className="w-12 h-12 bg-zinc-900 rounded-2xl flex items-center justify-center mb-3">
-                          <Users className="w-6 h-6 text-zinc-700" />
-                        </div>
-                        <p className="text-zinc-600 text-sm font-medium">No pending applications</p>
-                        <p className="text-zinc-700 text-xs mt-1">All applicants have been processed.</p>
-                      </div>
-                    </td>
+
+          {/* ── SEASONALITY + SYSTEM NOTICES ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-5">
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <SeasonalityIndicator />
+              <div className="mt-2">
+                <ActiveDriveCountdown activeDrives={stats.activeDrives} peakDays={stats.activeDrives > 3 ? 5 : 0} />
+              </div>
+            </motion.div>
+
+            <motion.div
+              className="bg-layer-2 border border-zinc-800/40 rounded-xl p-4"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <div className="op-label text-zinc-500 mb-2">System Notices</div>
+              <SystemNotices notices={systemNotices} compact />
+            </motion.div>
+          </div>
+
+          {/* ── COMPRESSED ACTIVITY FEED ── */}
+          <motion.div
+            className="bg-layer-2 border border-zinc-800/40 rounded-xl p-4"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <ActivityStream events={mockActivity} max={6} compact />
+          </motion.div>
+
+          {/* ── CONVERSION FUNNEL — WORKFLOW ANALYTICS ── */}
+          <motion.div
+            className="bg-layer-2 border border-zinc-800/40 rounded-xl p-4"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.12 }}
+          >
+            <ConversionFunnel stages={funnelStages} total={stats.totalApplicants} />
+            <FunnelMetrics stages={funnelStages} total={stats.totalApplicants} />
+          </motion.div>
+
+          {/* ── OPERATIONAL WEAR: Crowded Timeline + Delays + Statuses ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <motion.div
+              className="bg-layer-2 border border-zinc-800/40 rounded-xl p-4"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.14 }}
+            >
+              <div className="op-label text-zinc-500 mb-2">Today's Timeline</div>
+              <CrowdedTimeline items={wear.crowdedTimeline.slice(0, 6)} />
+            </motion.div>
+
+            <motion.div
+              className="bg-layer-2 border border-zinc-800/40 rounded-xl p-4"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.16 }}
+            >
+              <StatusDistribution statuses={wear.mixedStatuses} />
+            </motion.div>
+
+            <motion.div
+              className="bg-layer-2 border border-zinc-800/40 rounded-xl p-4"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.18 }}
+            >
+              <DelayedActions actions={wear.delayedActions} />
+            </motion.div>
+          </div>
+
+          {/* ── Recent Applications Table (compact) ── */}
+          <motion.div
+            className="bg-layer-2 border border-zinc-800/40 rounded-xl overflow-hidden"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.18 }}
+          >
+            <div className="px-4 py-3 flex items-center justify-between border-b border-zinc-800/40">
+              <span className="op-label text-zinc-500">Recent Applications</span>
+              <Link
+                href="/admin/applicants"
+                className="text-[11px] text-primary hover:text-primary/80 transition-colors"
+              >
+                View all
+              </Link>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-zinc-800/40">
+                    <th className="text-left op-label text-zinc-600 pb-2 px-4 pt-2">Candidate</th>
+                    <th className="text-left op-label text-zinc-600 pb-2 px-4 pt-2">Company</th>
+                    <th className="text-left op-label text-zinc-600 pb-2 px-4 pt-2">Applied</th>
+                    <th className="text-right op-label text-zinc-600 pb-2 px-4 pt-2">Status</th>
                   </tr>
-                ) : (
-                  <AnimatePresence>
-                    {recentApplications.map((app: any, index: number) => (
-                      <motion.tr 
-                        key={app.id}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: index * 0.03 }}
-                        className="hover:bg-zinc-900/30 transition-colors group cursor-default"
-                      >
-                        <td className="px-5 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center text-primary text-xs font-semibold">
-                              {app.student?.full_name?.[0]}
-                            </div>
-                            <div>
-                              <p className="font-medium text-sm text-zinc-300">{app.student?.full_name}</p>
-                              <p className="text-[10px] text-zinc-600 font-medium uppercase tracking-wider">{app.student?.department}</p>
-                            </div>
+                </thead>
+                <tbody>
+                  {recentApplications.slice(0, 8).map((app) => (
+                    <tr
+                      key={app.id}
+                      className="border-b border-zinc-800/20 hover:bg-white/[0.01] transition-colors"
+                    >
+                      <td className="py-2 px-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded bg-primary/20 flex items-center justify-center text-primary text-[10px] font-semibold shrink-0">
+                            {app.student?.full_name?.[0]}
                           </div>
-                        </td>
-                        <td className="px-5 py-4">
-                          <span className="font-medium text-sm text-zinc-400">{app.company?.company_name}</span>
-                        </td>
-                        <td className="px-5 py-4">
-                          <span className="text-xs text-zinc-600">{format(new Date(app.applied_at), 'MMM dd, HH:mm')}</span>
-                        </td>
-                        <td className="px-5 py-4">
-                          <span className={`px-3 py-1 rounded-xl text-[10px] font-semibold uppercase tracking-wider border transition-all ${getStatusColor(app.status)}`}>
-                            {app.status}
-                          </span>
-                        </td>
-                      </motion.tr>
-                    ))}
-                  </AnimatePresence>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </motion.div>
-
-        <div className="space-y-6">
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            whileHover={{ scale: 1.01 }}
-            className="bg-gradient-to-br from-primary via-purple-600 to-zinc-950 rounded-2xl p-[1px] group"
-          >
-            <div className="bg-zinc-950 rounded-[calc(1rem-1px)] p-6 h-full relative overflow-hidden">
-               <div className="absolute -top-12 -right-12 w-32 h-32 bg-primary/30 blur-[50px] group-hover:scale-150 transition-transform duration-700" />
-               <Zap className="w-10 h-10 text-primary mb-6" />
-               <h2 className="text-xl font-bold tracking-tight mb-2">Initialize Drive</h2>
-               <p className="text-zinc-500 mb-6 text-sm leading-relaxed">Onboard new placement entities into the ecosystem.</p>
-               <Link href="/admin/companies" className="w-full bg-white text-black h-12 rounded-2xl font-medium flex items-center justify-center gap-2 text-sm hover:scale-[1.02] active:scale-[0.98] transition-all">
-                 <Plus className="w-4 h-4" />
-                 Launch Environment
-               </Link>
+                          <div>
+                            <p className="text-[13px] text-zinc-300 leading-tight">
+                              {app.student?.full_name}
+                            </p>
+                            <p className="text-[11px] text-zinc-600">{app.student?.department}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-2 px-4 text-[13px] text-zinc-500">{app.company?.company_name}</td>
+                      <td className="py-2 px-4 text-[12px] text-zinc-600">
+                        {format(new Date(app.applied_at), "MMM dd")}
+                      </td>
+                      <td className="py-2 px-4 text-right">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[11px] font-medium border ${getStatusColor(app.status)}`}
+                        >
+                          {app.status === "Applied" ? "Awaiting review" : app.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </motion.div>
 
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.15 }}
-            className="p-6 rounded-2xl bg-zinc-950 border border-zinc-800"
-          >
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-600 mb-5 pb-3 border-b border-zinc-800">Operational Directives</h3>
-            <ul className="space-y-4">
-              {[
-                "Neutralize pending approvals",
-                "Execute interview scheduling",
-                "Generate eligibility audits",
-                "Finalize placement offers"
-              ].map((text, i) => (
-                <motion.li 
-                  key={i}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 + i * 0.1 }}
-                  className="flex items-center gap-3 text-sm font-medium text-zinc-500 group"
-                >
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
-                  {text}
-                </motion.li>
-              ))}
-            </ul>
-          </motion.div>
         </div>
       </div>
     </div>

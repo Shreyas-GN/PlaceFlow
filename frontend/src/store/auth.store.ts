@@ -7,6 +7,7 @@ interface User {
   email: string;
   department: string;
   cgpa: number;
+  created_at: string;
 }
 
 interface AuthState {

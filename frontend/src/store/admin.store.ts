@@ -6,6 +6,7 @@ interface AdminUser {
   full_name: string;
   email: string;
   role: string;
+  created_at: string;
 }
 
 interface AdminAuthState {
