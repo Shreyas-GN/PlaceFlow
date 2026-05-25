@@ -1,16 +1,14 @@
-version: '3.8'
-
 services:
   backend:
-    build: ./PlaceFlow/backend
-    env_file: .env.prod
+    build: ./backend
+    env_file: .env
     ports:
       - "8000:8000"
     restart: always
 
   frontend:
-    build: ./PlaceFlow/frontend
-    env_file: .env.prod
+    build: ./frontend
+    env_file: .env
     ports:
       - "3000:3000"
     restart: always

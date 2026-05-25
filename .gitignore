@@ -1,6 +1,7 @@
 # --- Secrets ---
 .env
 .env.local
+.env.prod
 .env.*.local
 
 # --- Local-only directories ---
