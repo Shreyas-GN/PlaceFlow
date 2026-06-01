@@ -35,6 +35,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
+  const handlePaletteAction = useCallback((action: string) => {
+    if (action === "create-drive") {
+      router.push("/admin/companies?create=drive");
+    }
+  }, [router]);
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -233,7 +239,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </main>
       </div>
 
-      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} isAdmin={true} />
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        isAdmin={true}
+        onAction={handlePaletteAction}
+      />
     </div>
   );
 }

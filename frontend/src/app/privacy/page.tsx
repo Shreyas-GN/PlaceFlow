@@ -2,13 +2,17 @@ import LegalPage from "@/components/legal/LegalPage";
 
 const sections = [
   { id: "introduction", label: "Introduction" },
-  { id: "data-collection", label: "Data Collection" },
-  { id: "use-of-information", label: "Use of Information" },
-  { id: "data-sharing", label: "Data Sharing" },
-  { id: "cookies", label: "Cookies" },
+  { id: "student-information", label: "Student Information" },
+  { id: "recruiter-information", label: "Recruiter Information" },
+  { id: "usage-information", label: "Usage Information" },
+  { id: "how-we-use-information", label: "How We Use Information" },
+  { id: "data-access", label: "Data Access" },
+  { id: "security", label: "Data Storage & Security" },
   { id: "data-retention", label: "Data Retention" },
-  { id: "security", label: "Security" },
+  { id: "third-parties", label: "Third-Party Services" },
   { id: "user-rights", label: "User Rights" },
+  { id: "cookies", label: "Cookies" },
+  { id: "changes", label: "Changes" },
   { id: "contact", label: "Contact" },
 ];
 
@@ -17,93 +21,131 @@ export default function PrivacyPage() {
     <LegalPage
       title="Privacy Policy"
       subtitle="How PlaceFlow collects, uses, and protects your data."
-      lastUpdated="May 25, 2026"
+      lastUpdated="May 2026"
       sections={sections}
     >
       <h2 id="introduction">Introduction</h2>
       <p>
-        PlaceFlow ("we", "our", "the platform") is a placement management system designed for educational institutions.
-        This Privacy Policy explains how we handle personal data when you use our platform.
+        PlaceFlow (“we”, “our”, or “us”) provides software for managing campus placement operations, including student applications,
+        recruiter workflows, interview coordination, and placement administration.
       </p>
       <p>
-        We take data protection seriously. PlaceFlow is built on the principle that your data belongs to you.
-        We process only what is necessary to make placement operations work effectively.
+        This Privacy Policy explains what information we collect, how we use it, and the choices available to users and institutions using the platform.
       </p>
+      <p>By using PlaceFlow, you agree to the practices described in this policy.</p>
 
-      <h2 id="data-collection">Data We Collect</h2>
-      <p>We collect data that is necessary for placement coordination:</p>
+      <h2 id="student-information">Student Information</h2>
+      <p>Institutions using PlaceFlow may upload or manage student-related information including:</p>
       <ul>
-        <li><strong>Student Data:</strong> Full name, institutional email, department, CGPA, academic records relevant to placement eligibility.</li>
-        <li><strong>Recruiter Data:</strong> Company name, contact information, role details, interview schedules.</li>
-        <li><strong>Placement Officer Data:</strong> Name, email, role within the placement cell.</li>
-        <li><strong>Usage Data:</strong> Page interactions, feature usage, session information for improving the platform.</li>
-        <li><strong>Uploaded Documents:</strong> Resumes, offer letters, and other documents shared during the placement process.</li>
+        <li>Full name</li>
+        <li>Email address</li>
+        <li>Academic details</li>
+        <li>Branch and graduation year</li>
+        <li>CGPA and eligibility information</li>
+        <li>Resume and uploaded documents</li>
+        <li>Placement application history</li>
       </ul>
-      <p>We do not collect sensitive personal data beyond what is required for placement operations.</p>
 
-      <h2 id="use-of-information">How We Use Your Information</h2>
-      <p>Your data is used exclusively for placement-related operations:</p>
+      <h2 id="recruiter-information">Recruiter Information</h2>
+      <p>We may collect recruiter and company-related information including:</p>
       <ul>
-        <li>Facilitating student applications to placement drives.</li>
-        <li>Managing interview scheduling and recruitment workflows.</li>
-        <li>Generating analytics and reports for institutional planning.</li>
-        <li>Communicating placement-related updates and notifications.</li>
-        <li>Improving platform functionality and user experience.</li>
+        <li>Recruiter name</li>
+        <li>Company name</li>
+        <li>Work email</li>
+        <li>Hiring workflows and interview schedules</li>
       </ul>
-      <p>We do not use your data for advertising, profiling, or any purpose unrelated to placement operations.</p>
 
-      <h2 id="data-sharing">Data Sharing</h2>
-      <p>Your data is shared only within the scope of placement operations:</p>
+      <h2 id="usage-information">Usage Information</h2>
+      <p>We automatically collect limited technical and operational information such as:</p>
       <ul>
-        <li><strong>Students:</strong> Your profile and application data is shared with recruiters you apply to.</li>
-        <li><strong>Recruiters:</strong> Access only the data of students who apply to their drives.</li>
-        <li><strong>Institutions:</strong> Placement officers can view data within their institution.</li>
-        <li><strong>Third Parties:</strong> We do not sell your data. We may use infrastructure providers (cloud hosting, database) who are bound by data processing agreements.</li>
+        <li>Device and browser type</li>
+        <li>Login activity</li>
+        <li>IP address</li>
+        <li>Session timestamps</li>
+        <li>Interaction logs and workflow activity</li>
       </ul>
-      <p>Resumes belong to students. Institutions control placement workflows. Recruiters access only authorized data.</p>
 
-      <h2 id="cookies">Cookies</h2>
-      <p>We use only essential cookies required for authentication and session management:</p>
+      <h2 id="how-we-use-information">How We Use Information</h2>
+      <p>We use collected information to:</p>
       <ul>
-        <li><strong>Session Tokens:</strong> JWT-based authentication tokens stored in local storage.</li>
-        <li><strong>Functional Cookies:</strong> Used for remembering user preferences and session state.</li>
+        <li>Manage placement workflows</li>
+        <li>Process applications and eligibility checks</li>
+        <li>Coordinate interviews and recruiter activities</li>
+        <li>Improve platform reliability and performance</li>
+        <li>Maintain audit logs and operational history</li>
+        <li>Provide support and platform updates</li>
+        <li>Protect platform security and prevent misuse</li>
       </ul>
-      <p>We do not use tracking cookies, advertising cookies, or third-party analytics cookies.</p>
+      <p>We do not sell personal information to advertisers or third parties.</p>
+
+      <h2 id="data-access">Data Access and Visibility</h2>
+      <p>Access to information is restricted based on platform roles.</p>
+      <p>For example:</p>
+      <ul>
+        <li>Students can access their own application data</li>
+        <li>Recruiters can access authorized candidate information</li>
+        <li>Placement administrators can manage institutional workflows</li>
+      </ul>
+      <p>Institutions remain responsible for determining authorized platform access.</p>
+
+      <h2 id="security">Data Storage and Security</h2>
+      <p>We use industry-standard measures to protect stored information, including:</p>
+      <ul>
+        <li>Encrypted connections (HTTPS)</li>
+        <li>Access controls and authentication</li>
+        <li>Secure infrastructure providers</li>
+        <li>Activity logging and monitoring</li>
+      </ul>
+      <p>While we work to protect information, no platform can guarantee absolute security.</p>
 
       <h2 id="data-retention">Data Retention</h2>
-      <p>We retain your data only as long as necessary:</p>
+      <p>Information may be retained:</p>
       <ul>
-        <li><strong>Active Accounts:</strong> Data is retained while your account is active.</li>
-        <li><strong>Archived Drives:</strong> Closed placement drives are archived but retained for institutional records.</li>
-        <li><strong>Deleted Accounts:</strong> Data is deleted or anonymized within 30 days of account deletion request.</li>
-        <li><strong>Audit Logs:</strong> Retained for compliance and operational review, typically 12 months.</li>
+        <li>while institutional accounts remain active</li>
+        <li>for operational history and audit purposes</li>
+        <li>to comply with legal or institutional obligations</li>
       </ul>
+      <p>Institutions may request deletion of data subject to operational or legal requirements.</p>
 
-      <h2 id="security">Security</h2>
-      <p>We implement industry-standard security measures:</p>
+      <h2 id="third-parties">Third-Party Services</h2>
+      <p>PlaceFlow may use trusted third-party services for:</p>
       <ul>
-        <li>Passwords are hashed using bcrypt with salt.</li>
-        <li>All API communication uses HTTPS encryption.</li>
-        <li>JWT tokens with expiry for authenticated sessions.</li>
-        <li>Database-level access controls and parameterized queries.</li>
-        <li>Role-based access control for students, officers, and recruiters.</li>
+        <li>hosting infrastructure</li>
+        <li>authentication</li>
+        <li>analytics</li>
+        <li>file storage</li>
+        <li>email delivery</li>
       </ul>
+      <p>These providers process information only as necessary to support platform functionality.</p>
 
-      <h2 id="user-rights">Your Rights</h2>
-      <p>Depending on your jurisdiction, you may have the following rights:</p>
+      <h2 id="user-rights">User Rights</h2>
+      <p>Depending on applicable laws or institutional policies, users may request:</p>
       <ul>
-        <li><strong>Access:</strong> Request a copy of your personal data.</li>
-        <li><strong>Correction:</strong> Update inaccurate or incomplete data.</li>
-        <li><strong>Deletion:</strong> Request deletion of your account and associated data.</li>
-        <li><strong>Portability:</strong> Export your data in a structured format.</li>
-        <li><strong>Withdraw Consent:</strong> Stop specific data processing where applicable.</li>
+        <li>access to their information</li>
+        <li>correction of inaccurate information</li>
+        <li>deletion of certain records</li>
+        <li>export of available data</li>
       </ul>
-      <p>To exercise these rights, contact your institutional placement office or reach out to us directly.</p>
+      <p>Requests should be directed through the relevant institution or placement office where applicable.</p>
+
+      <h2 id="cookies">Cookies and Session Data</h2>
+      <p>PlaceFlow may use cookies or similar technologies to:</p>
+      <ul>
+        <li>maintain sessions</li>
+        <li>improve usability</li>
+        <li>support authentication</li>
+        <li>understand platform performance</li>
+      </ul>
+      <p>Users may disable cookies through browser settings, though some functionality may be affected.</p>
+
+      <h2 id="changes">Changes to This Policy</h2>
+      <p>We may update this Privacy Policy periodically.</p>
+      <p>When material changes occur, we will update the “Last updated” date and may notify users through the platform.</p>
 
       <h2 id="contact">Contact</h2>
       <p>
-        For privacy-related inquiries, contact your institution&apos;s placement office or reach out to us at{" "}
-        <a href="mailto:privacy@placeflow.app">privacy@placeflow.app</a>.
+        For questions regarding this Privacy Policy or data handling practices, contact:
+        <a href="mailto:support@placeflow.app">support@placeflow.app</a>
       </p>
     </LegalPage>
   );

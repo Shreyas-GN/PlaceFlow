@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Search, User, LogOut, Menu, Command } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import { useRouter, usePathname } from "next/navigation";
@@ -46,6 +46,10 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     toast.success("Logged out successfully");
     router.push("/login");
   };
+
+  const closePalette = useCallback(() => {
+    setPaletteOpen(false);
+  }, []);
 
   const trackSearch = () => {
     setPaletteOpen(true);
@@ -112,7 +116,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
         </div>
       </header>
 
-      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} isAdmin={isAdmin} />
+      <CommandPalette open={paletteOpen} onClose={closePalette} isAdmin={isAdmin} />
     </>
   );
 }

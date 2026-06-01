@@ -501,6 +501,7 @@ export default function LandingPage() {
             <Link href="/privacy" className="text-sm text-zinc-600 hover:text-zinc-400 transition-colors">Privacy</Link>
             <Link href="/terms" className="text-sm text-zinc-600 hover:text-zinc-400 transition-colors">Terms</Link>
             <Link href="/security" className="text-sm text-zinc-600 hover:text-zinc-400 transition-colors">Security</Link>
+            <a href="mailto:support@placeflow.app" className="text-sm text-zinc-600 hover:text-zinc-400 transition-colors">Contact</a>
           </div>
         </div>
       </footer>

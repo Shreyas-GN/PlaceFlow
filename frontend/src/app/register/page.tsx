@@ -115,6 +115,8 @@ export default function RegisterPage() {
                 <input
                   type="number"
                   step="0.01"
+                  min="0"
+                  max="10"
                   required
                   value={formData.cgpa}
                   onChange={(e) => setFormData({ ...formData, cgpa: e.target.value })}

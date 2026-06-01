@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Plus, Search, Building2, Calendar, Target, IndianRupee, AlertTriangle, Clock, ChevronDown, ChevronUp, Users, Layers, X, Ban, Archive } from "lucide-react";
 import { adminService } from "@/services/admin.service";
 import { toast } from "sonner";
@@ -33,6 +34,8 @@ export default function CompaniesPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [closingCompany, setClosingCompany] = useState<{ id: string; name: string } | null>(null);
   const [showArchived, setShowArchived] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     loadCompanies();
@@ -59,6 +62,19 @@ export default function CompaniesPage() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  useEffect(() => {
+    if (searchParams.get("create") === "drive") {
+      setIsModalOpen(true);
+    }
+  }, [searchParams]);
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    if (searchParams.get("create") === "drive") {
+      router.replace("/admin/companies");
+    }
+  };
 
   const loadCompanies = async () => {
     setIsLoading(true);
@@ -297,7 +313,7 @@ export default function CompaniesPage() {
       <CompanyFormModal
         mode="create"
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleModalClose}
         onSuccess={loadCompanies}
       />
 

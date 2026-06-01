@@ -74,6 +74,7 @@ export default function LegalPage({ title, subtitle, lastUpdated, sections, chil
             <Link href="/privacy" className="hover:text-zinc-400 transition-colors">Privacy</Link>
             <Link href="/terms" className="hover:text-zinc-400 transition-colors">Terms</Link>
             <Link href="/security" className="hover:text-zinc-400 transition-colors">Security</Link>
+            <a href="mailto:support@placeflow.app" className="hover:text-zinc-400 transition-colors">Contact</a>
           </div>
         </div>
       </footer>

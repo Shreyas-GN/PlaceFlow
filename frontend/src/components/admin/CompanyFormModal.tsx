@@ -177,6 +177,8 @@ export default function CompanyFormModal({ mode, isOpen, onClose, onSuccess, com
                     <input
                       type="number"
                       step="0.01"
+                      min="0"
+                      max="10"
                       required
                       value={formData.min_cgpa}
                       onChange={(e) => setFormData({...formData, min_cgpa: e.target.value})}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   Search,
@@ -80,18 +80,20 @@ export default function CommandPalette({ open, onClose, isAdmin, onAction }: Com
     onClose();
   }, [router, onClose]);
 
-  const actions: CommandAction[] = isAdmin
-    ? [
-        { id: "create-drive", label: "Create Drive", description: "New placement drive", icon: Plus, action: () => { onClose(); onAction?.("create-drive"); } },
-        { id: "export-applicants", label: "Export Applicants", description: "Download applicant data", icon: Download, action: () => { onClose(); onAction?.("export"); } },
-        { id: "archive-drive", label: "Archive Closed Drive", description: "Archive completed drives", icon: Archive, action: () => { onClose(); onAction?.("archive"); } },
-      ]
-    : [
-        { id: "view-applications", label: "View Applications", description: "Browse my applications", icon: Briefcase, action: () => navigate("/applications") },
-        { id: "browse-companies", label: "Browse Companies", description: "View eligible companies", icon: Building2, action: () => navigate("/companies") },
-      ];
+  const actions: CommandAction[] = useMemo(() => {
+    return isAdmin
+      ? [
+          { id: "create-drive", label: "Create Drive", description: "New placement drive", icon: Plus, action: () => { onClose(); onAction?.("create-drive"); } },
+          { id: "export-applicants", label: "Export Applicants", description: "Download applicant data", icon: Download, action: () => { onClose(); onAction?.("export"); } },
+          { id: "archive-drive", label: "Archive Closed Drive", description: "Archive completed drives", icon: Archive, action: () => { onClose(); onAction?.("archive"); } },
+        ]
+      : [
+          { id: "view-applications", label: "View Applications", description: "Browse my applications", icon: Briefcase, action: () => navigate("/applications") },
+          { id: "browse-companies", label: "Browse Companies", description: "View eligible companies", icon: Building2, action: () => navigate("/companies") },
+        ];
+  }, [isAdmin, navigate, onClose, onAction]);
 
-  const allPages = isAdmin ? adminPages : studentPages;
+  const allPages = useMemo(() => (isAdmin ? adminPages : studentPages), [isAdmin]);
 
   const flatItems = useCallback(() => {
     const items: { id: string; label: string; icon?: typeof Plus; onSelect: () => void }[] = [];
