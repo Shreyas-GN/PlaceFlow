@@ -10,9 +10,11 @@ export default function DocsPage() {
     const loadSwagger = async () => {
       // Dynamically import swagger-ui-dist to bypass Turbopack's ESM issues
       // with swagger-ui-react dependencies
+      // @ts-ignore
       const mod = await import("swagger-ui-dist/swagger-ui-bundle");
       const SwaggerUIBundle = mod.default || mod.SwaggerUIBundle || mod;
 
+      // @ts-ignore
       const presetMod = await import("swagger-ui-dist/swagger-ui-standalone-preset");
       const SwaggerUIStandalonePreset = presetMod.default || presetMod.SwaggerUIStandalonePreset || presetMod;
 

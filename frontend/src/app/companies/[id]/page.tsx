@@ -118,7 +118,7 @@ export default function CompanyDetailPage() {
         <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
           <div className="flex items-start justify-between gap-4 mb-4">
             <div className="flex items-start gap-4">
-              <CompanyLogo name={company.company_name} size="xl" />
+              <CompanyLogo name={company.company_name} size="lg" />
               <div>
                 <h1 className="text-xl font-semibold text-gray-900">{company.company_name}</h1>
                 <div className="flex items-center gap-1.5 text-gray-500 text-sm mt-0.5">
