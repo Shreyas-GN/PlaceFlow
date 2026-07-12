@@ -10,6 +10,12 @@ class CompanyBase(BaseModel):
     min_cgpa: float = Field(ge=0, le=10)
     eligible_departments: str # Comma-separated or JSON string
     deadline: datetime
+    ctc: Optional[str] = None
+    description: Optional[str] = None
+    hiring_process: Optional[str] = None
+    required_skills: Optional[str] = None
+    location: Optional[str] = None
+    company_type: Optional[str] = None
 
 class CompanyCreate(CompanyBase):
     pass
@@ -22,12 +28,18 @@ class CompanyUpdate(BaseModel):
     eligible_departments: Optional[str] = None
     deadline: Optional[datetime] = None
     status: Optional[str] = None
+    ctc: Optional[str] = None
+    description: Optional[str] = None
+    hiring_process: Optional[str] = None
+    required_skills: Optional[str] = None
+    location: Optional[str] = None
+    company_type: Optional[str] = None
 
 class CompanyResponse(CompanyBase):
     id: UUID
     status: str
     created_at: datetime
-    
+
     model_config = ConfigDict(from_attributes=True)
 
 class DriveCloseConsequence(BaseModel):

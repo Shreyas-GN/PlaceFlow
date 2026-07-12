@@ -19,4 +19,9 @@ export const applicationService = {
     const response = await api.get('/applications/');
     return response.data;
   },
+
+  async getApplication(id: string) {
+    const response = await api.get(`/applications/${id}`);
+    return response.data;
+  },
 };

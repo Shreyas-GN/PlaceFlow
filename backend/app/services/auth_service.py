@@ -4,7 +4,7 @@ from fastapi.security import OAuth2PasswordBearer
 from app.models.student import Student
 from app.schemas.student import StudentCreate
 from app.schemas.auth import LoginSchema
-from app.core.security import get_password_hash, verify_password, create_access_token, decode_token
+from app.core.security import get_password_hash, verify_password, create_access_token, decode_token, create_reset_token, decode_reset_token
 from app.db.session import SessionLocal
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
@@ -86,3 +86,36 @@ class AuthService:
         db.add(user)
         db.commit()
         return {"detail": "Password updated successfully"}
+
+    @staticmethod
+    def forgot_password(db: Session, email: str):
+        user = db.query(Student).filter(Student.email == email).first()
+        # Always return success to avoid leaking which emails are registered
+        if not user:
+            return {"detail": "If that email exists, a reset link has been sent."}
+        token = create_reset_token(email)
+        # Mock: log the reset link; swap this for a real email send when SMTP is configured
+        import sys
+        print(f"\n[PASSWORD RESET] Link for {email}:\nhttp://localhost:3000/reset-password?token={token}\n", file=sys.stderr)
+        return {"detail": "If that email exists, a reset link has been sent."}
+
+    @staticmethod
+    def reset_password(db: Session, token: str, new_password: str):
+        email = decode_reset_token(token)
+        if not email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired reset token"
+            )
+        if len(new_password) < 6:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Password must be at least 6 characters"
+            )
+        user = db.query(Student).filter(Student.email == email).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        user.password_hash = get_password_hash(new_password)
+        db.add(user)
+        db.commit()
+        return {"detail": "Password reset successfully"}

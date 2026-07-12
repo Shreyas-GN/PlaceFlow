@@ -24,7 +24,7 @@ export function InterviewPipeline({
 
   return (
     <div className="space-y-2">
-      <div className="op-label text-zinc-500">Interview Pipeline</div>
+      <div className="text-xs font-medium text-gray-500">Interview Pipeline</div>
       <div className="flex items-center gap-0">
         {pipeline.map((stage, i) => {
           const isReached = i <= currentIdx;
@@ -34,14 +34,14 @@ export function InterviewPipeline({
               <div
                 className={cn(
                   "flex items-center gap-1.5 px-2 py-1.5 text-[11px] font-medium transition-colors",
-                  isReached ? "text-zinc-200" : "text-zinc-600"
+                  isReached ? "text-gray-900" : "text-gray-400"
                 )}
               >
                 <div
                   className={cn(
                     "w-2 h-2 rounded-full shrink-0",
-                    isReached ? stage.color : "bg-zinc-700",
-                    isCurrent && "ring-2 ring-offset-1 ring-offset-layer-2 ring-primary/40"
+                    isReached ? stage.color : "bg-gray-200",
+                    isCurrent && "ring-2 ring-offset-1 ring-offset-white ring-blue-500/40"
                   )}
                 />
                 <span className="truncate">{stage.label}</span>
@@ -50,7 +50,7 @@ export function InterviewPipeline({
                 <div
                   className={cn(
                     "flex-1 h-px mx-1",
-                    i < currentIdx ? "bg-zinc-600" : "bg-zinc-800"
+                    i < currentIdx ? "bg-gray-300" : "bg-gray-100"
                   )}
                 />
               )}
@@ -85,8 +85,8 @@ export function CompactPipelineStages({
               className={cn(
                 "px-1.5 py-0.5 rounded text-[10px] font-medium tabular-nums",
                 isReached
-                  ? `${stage.color}/20 text-white`
-                  : "bg-zinc-800/40 text-zinc-600"
+                  ? "bg-blue-50 text-blue-700 border border-blue-200"
+                  : "bg-gray-100 text-gray-400"
               )}
             >
               {count}
@@ -95,7 +95,7 @@ export function CompactPipelineStages({
               <div
                 className={cn(
                   "w-3 h-px",
-                  i < currentIdx ? "bg-zinc-600" : "bg-zinc-800"
+                  i < currentIdx ? "bg-gray-300" : "bg-gray-100"
                 )}
               />
             )}

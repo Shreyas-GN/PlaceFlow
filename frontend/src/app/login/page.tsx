@@ -1,151 +1,147 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { GraduationCap, Loader2, ArrowRight } from "lucide-react";
+import { GraduationCap, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useAuthStore } from "@/store/auth.store";
 import { authService } from "@/services/auth.service";
-import { motion } from "framer-motion";
+import { FormField } from "@/components/shared/FormField";
+
+const loginSchema = z.object({
+  email: z.string().email("Enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
+type LoginForm = z.infer<typeof loginSchema>;
+
+const INPUT_CLS =
+  "w-full bg-white border border-gray-300 rounded-[10px] px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-900 placeholder:text-gray-400";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema),
+    mode: "onBlur",
+  });
+
   useEffect(() => {
-    const hasToken = localStorage.getItem('auth-storage');
+    const hasToken = localStorage.getItem("auth-storage");
     if (hasToken) {
       try {
         const { state } = JSON.parse(hasToken);
         if (!state.isAuthenticated) {
-          localStorage.removeItem('auth-storage');
-          localStorage.removeItem('admin-auth-storage');
+          localStorage.removeItem("auth-storage");
+          localStorage.removeItem("admin-auth-storage");
         }
-      } catch (e) {
+      } catch {
         localStorage.clear();
       }
     }
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
+  const onSubmit = async (data: LoginForm) => {
     try {
-      const data = await authService.login(email, password);
-      login(data.access_token);
-      toast.success("Login successful");
+      const res = await authService.login(data.email, data.password);
+      login(res.access_token);
+      toast.success("Welcome back!");
       router.push("/dashboard");
     } catch (error: any) {
       const detail = error.response?.data?.detail;
-      const errorMessage = typeof detail === "string" 
-        ? detail 
-        : Array.isArray(detail)
+      const message =
+        typeof detail === "string"
+          ? detail
+          : Array.isArray(detail)
           ? detail[0]?.msg || "Validation error"
-          : "Invalid credentials";
-      
-      toast.error(errorMessage);
-    } finally {
-      setIsLoading(false);
+          : "Invalid email or password";
+      toast.error(message);
     }
   };
 
   return (
-    <div className="min-h-screen bg-layer-1 flex items-center justify-center p-6 relative overflow-hidden">
-
-      
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3 }}
-        className="w-full max-w-md relative z-10"
-      >
-        <div className="text-center mb-10">
-          <motion.div 
-            whileHover={{ rotate: 10 }}
-            className="inline-flex items-center gap-3 font-semibold text-3xl mb-6 group cursor-default"
-          >
-            <motion.div 
-              whileHover={{ scale: 1.1 }}
-              className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center shadow-2xl shadow-primary/40"
-            >
-              <GraduationCap className="w-7 h-7 text-primary-foreground" />
-            </motion.div>
-            <span className="text-white">PlaceFlow</span>
-          </motion.div>
-          <h1 className="text-2xl font-semibold tracking-tight text-white">Student Authenticator</h1>
-          <p className="text-zinc-500 mt-2 text-sm">Access your placement command center.</p>
+    <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center p-6">
+      <div className="w-full max-w-md">
+        {/* Brand */}
+        <div className="text-center mb-8">
+          <Link href="/" className="inline-flex items-center gap-2.5 mb-6">
+            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center">
+              <GraduationCap className="w-6 h-6 text-white" />
+            </div>
+            <span className="font-semibold text-xl text-gray-900">PlaceFlow</span>
+          </Link>
+          <h1 className="text-2xl font-semibold text-gray-900">Sign in</h1>
+          <p className="text-gray-500 mt-1.5 text-sm">
+            Track your applications, interviews, and offers.
+          </p>
         </div>
 
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="bg-layer-2 border border-zinc-800/60 rounded-2xl p-8 shadow-elevated"
-        >
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-zinc-500 ml-1">Academic Email</label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="id@university.edu"
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-zinc-700"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex justify-between items-center ml-1">
-                <label className="text-xs font-medium text-zinc-500">Password</label>
-                <Link href="#" className="text-xs font-medium text-primary hover:underline">Reset</Link>
-              </div>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-zinc-700"
-              />
-            </div>
-
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              type="submit"
-              disabled={isLoading}
-              className="w-full h-14 bg-white text-black rounded-md font-semibold flex items-center justify-center gap-2 text-sm hover:bg-primary hover:text-white transition-all disabled:opacity-50"
-            >
-              {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-              {isLoading ? "Synchronizing..." : (
-                <>
-                  Establish Session
-                  <ArrowRight className="w-4 h-4" />
-                </>
+        {/* Card */}
+        <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-card">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
+            <FormField label="Email" error={errors.email} required>
+              {(id) => (
+                <input
+                  id={id}
+                  type="email"
+                  {...register("email")}
+                  placeholder="you@university.edu"
+                  className={INPUT_CLS}
+                />
               )}
-            </motion.button>
+            </FormField>
+
+            <FormField label="Password" error={errors.password} required>
+              {(id) => (
+                <div className="space-y-1.5">
+                  <input
+                    id={id}
+                    type="password"
+                    {...register("password")}
+                    placeholder="••••••••"
+                    className={INPUT_CLS}
+                  />
+                  <div className="flex justify-end">
+                    <Link
+                      href="/forgot-password"
+                      className="text-sm text-blue-600 hover:underline"
+                    >
+                      Forgot password?
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </FormField>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full h-11 bg-blue-600 text-white rounded-[10px] font-medium text-sm flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+            >
+              {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+              {isSubmitting ? "Signing in..." : "Sign In"}
+            </button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-zinc-800 text-center">
-            <p className="text-sm text-zinc-500">
-              New to the platform?{" "}
-              <Link href="/register" className="text-primary font-semibold hover:underline ml-1">
-                Initialize Account
+          <div className="mt-6 pt-6 border-t border-gray-100 text-center">
+            <p className="text-sm text-gray-500">
+              Don't have an account?{" "}
+              <Link href="/register" className="text-blue-600 font-medium hover:underline">
+                Create account
               </Link>
             </p>
           </div>
-        </motion.div>
-
-        <p className="text-center mt-10 text-xs text-muted-foreground">
-          Secure Infrastructure v1.0.4
-        </p>
-      </motion.div>
+        </div>
+      </div>
     </div>
   );
 }

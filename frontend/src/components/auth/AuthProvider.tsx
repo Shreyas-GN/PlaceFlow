@@ -5,12 +5,20 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth.store";
 import { authService } from "@/services/auth.service";
 import { Loader2 } from "lucide-react";
-import { motion } from "framer-motion";
 
-const protectedRoutes = ["/dashboard", "/companies", "/applications"];
+const protectedRoutes = ["/dashboard", "/companies", "/applications", "/onboarding"];
+
+function SessionLoader() {
+  return (
+    <div className="h-screen w-screen bg-[#FAFAF8] flex flex-col items-center justify-center gap-4">
+      <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+      <p className="text-xs text-gray-400">Verifying session…</p>
+    </div>
+  );
+}
 
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { token, setUser, logout } = useAuthStore();
+  const { token, setUser, logout, _hasHydrated } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
   const [isVerifying, setIsVerifying] = useState(true);
@@ -22,11 +30,11 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   }, []);
 
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted || !_hasHydrated) return;
 
     const verifySession = async () => {
       if (verifyingRef.current) return;
-      
+
       const isLoginPage = pathname === "/login" || pathname === "/register";
 
       if (token) {
@@ -34,13 +42,20 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
         try {
           const user = await authService.getMe();
           setUser(user);
-          if (isLoginPage) {
+          if (!user.profile_complete && pathname !== "/onboarding") {
+            router.push("/onboarding");
+          } else if (user.profile_complete && pathname === "/onboarding") {
+            router.push("/dashboard");
+          } else if (isLoginPage) {
             router.push("/dashboard");
           }
-        } catch (error) {
-          logout();
-          if (isProtected) {
-            router.replace("/login");
+        } catch (error: any) {
+          // Only logout on explicit 401 — network errors shouldn't clear the session
+          if (error?.response?.status === 401) {
+            logout();
+            if (isProtected) {
+              router.replace("/login");
+            }
           }
         } finally {
           verifyingRef.current = false;
@@ -48,67 +63,18 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
       } else if (isProtected) {
         router.replace("/login");
       }
-      
+
       setIsVerifying(false);
     };
 
     verifySession();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mounted, token, pathname]);
+  }, [mounted, _hasHydrated, token, pathname]);
 
   const isProtected = mounted && protectedRoutes.some(route => pathname?.startsWith(route));
 
-  if (!mounted) {
-    return (
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="h-screen w-screen bg-layer-1 flex flex-col items-center justify-center gap-6"
-      >
-        <div className="relative">
-            <motion.div 
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ repeat: Infinity, duration: 1.5 }}
-              className="w-16 h-16 border-2 border-primary/20 rounded-full absolute inset-0"
-            />
-            <Loader2 className="w-12 h-12 text-primary animate-spin relative z-10" />
-        </div>
-        <motion.p 
-          animate={{ opacity: [0.5, 1, 0.5] }}
-          transition={{ repeat: Infinity, duration: 2 }}
-          className="text-xs text-muted-foreground"
-        >
-          Authenticating Session
-        </motion.p>
-      </motion.div>
-    );
-  }
-
-  if (isVerifying && isProtected) {
-    return (
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="h-screen w-screen bg-layer-1 flex flex-col items-center justify-center gap-6"
-      >
-        <div className="relative">
-            <motion.div 
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ repeat: Infinity, duration: 1.5 }}
-              className="w-16 h-16 border-2 border-primary/20 rounded-full absolute inset-0"
-            />
-            <Loader2 className="w-12 h-12 text-primary animate-spin relative z-10" />
-        </div>
-        <motion.p 
-          animate={{ opacity: [0.5, 1, 0.5] }}
-          transition={{ repeat: Infinity, duration: 2 }}
-          className="text-xs text-muted-foreground"
-        >
-          Authenticating Session
-        </motion.p>
-      </motion.div>
-    );
-  }
+  if (!mounted) return <SessionLoader />;
+  if (isVerifying && isProtected) return <SessionLoader />;
 
   return <>{children}</>;
 }

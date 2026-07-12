@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface FunnelStage {
@@ -23,10 +22,10 @@ export function ConversionFunnel({ stages, total, className }: ConversionFunnelP
   return (
     <div className={cn("space-y-0.5", className)}>
       <div className="flex items-center justify-between mb-2">
-        <span className="op-label text-zinc-500">Application Conversion Funnel</span>
+        <span className="text-xs font-medium text-gray-500">Application Conversion Funnel</span>
         <div className="flex items-center gap-1.5">
-          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/60" />
-          <span className="text-[10px] text-zinc-600 tabular-nums">{total} total entries</span>
+          <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+          <span className="text-[10px] text-gray-400 tabular-nums">{total} total entries</span>
         </div>
       </div>
       <div className="space-y-1.5">
@@ -42,27 +41,25 @@ export function ConversionFunnel({ stages, total, className }: ConversionFunnelP
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2 min-w-0">
                   <div className={cn("w-2 h-2 rounded-full shrink-0", stage.color)} />
-                  <span className="text-zinc-400 truncate">{stage.label}</span>
+                  <span className="text-gray-500 truncate">{stage.label}</span>
                 </div>
                 <div className="flex items-center gap-3 shrink-0 ml-3">
-                  <span className="text-zinc-200 font-semibold tabular-nums w-12 text-right">{stage.count}</span>
-                  <span className="text-zinc-600 w-10 text-right tabular-nums">{overallPct.toFixed(1)}%</span>
+                  <span className="text-gray-900 font-semibold tabular-nums w-12 text-right">{stage.count}</span>
+                  <span className="text-gray-400 w-10 text-right tabular-nums">{overallPct.toFixed(1)}%</span>
                   {dropPct !== null && (
                     <span className={cn(
                       "text-[10px] w-10 text-right tabular-nums",
-                      dropPct > 30 ? "text-rose-500" : dropPct > 10 ? "text-amber-500" : "text-emerald-500"
+                      dropPct > 30 ? "text-red-500" : dropPct > 10 ? "text-amber-500" : "text-green-500"
                     )}>
                       -{dropPct.toFixed(0)}%
                     </span>
                   )}
                 </div>
               </div>
-              <div className="relative h-2 rounded-full bg-zinc-800/60 overflow-hidden">
-                <motion.div
-                  className={cn("absolute inset-y-0 left-0 rounded-full", stage.color.replace("bg-", "bg-").replace("500", "500/80"))}
-                  initial={{ width: 0 }}
-                  animate={{ width: `${pct}%` }}
-                  transition={{ duration: 0.6, ease: "easeOut", delay: i * 0.08 }}
+              <div className="relative h-2 rounded-full bg-gray-100 overflow-hidden">
+                <div
+                  className={cn("absolute inset-y-0 left-0 rounded-full transition-all duration-500", stage.color)}
+                  style={{ width: `${pct}%` }}
                 />
               </div>
             </div>
@@ -95,11 +92,11 @@ export function FunnelMetrics({ stages, total }: { stages: FunnelStage[]; total:
   }, [stages, total]);
 
   return (
-    <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-zinc-800/20">
+    <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-gray-100">
       {metrics.map((m) => (
         <div key={m.label} className="text-center">
-          <p className="text-[18px] font-bold text-zinc-200 tabular-nums">{m.value}</p>
-          <p className="text-[10px] text-zinc-600">{m.label}</p>
+          <p className="text-[18px] font-bold text-gray-900 tabular-nums">{m.value}</p>
+          <p className="text-[10px] text-gray-400">{m.label}</p>
         </div>
       ))}
     </div>

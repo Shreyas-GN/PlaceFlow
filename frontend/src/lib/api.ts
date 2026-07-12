@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { toast } from 'sonner';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -33,18 +34,22 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Global 401 handling: clear tokens and redirect
+// 401 → redirect; network failures and 5xx → surface a fallback toast
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (typeof window !== 'undefined' && error.response?.status === 401) {
-      const url = error.config?.url || '';
-      const isAdminRoute = url.startsWith('/admin') || url.startsWith('/companies/') || url.startsWith('/applications/all');
-      try {
-        localStorage.removeItem('admin-auth-storage');
-        localStorage.removeItem('auth-storage');
-      } catch (e) {}
-      window.location.href = isAdminRoute ? '/admin/login' : '/login';
+    if (typeof window !== 'undefined') {
+      if (error.response?.status === 401) {
+        const url = error.config?.url || '';
+        const isAdminRoute = url.startsWith('/admin') || url.startsWith('/companies/') || url.startsWith('/applications/all');
+        try {
+          localStorage.removeItem('admin-auth-storage');
+          localStorage.removeItem('auth-storage');
+        } catch (e) {}
+        window.location.href = isAdminRoute ? '/admin/login' : '/login';
+      } else if (!error.response || error.response.status >= 500) {
+        toast.error('Something went wrong — please try again');
+      }
     }
     return Promise.reject(error);
   }

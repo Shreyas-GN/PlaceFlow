@@ -43,6 +43,12 @@ export const adminService = {
     min_cgpa: number;
     eligible_departments: string;
     deadline: string;
+    ctc?: string;
+    description?: string;
+    hiring_process?: string;
+    required_skills?: string;
+    location?: string;
+    company_type?: string;
   }) {
     const response = await api.post('/companies/', data);
     return response.data;
@@ -60,6 +66,12 @@ export const adminService = {
     min_cgpa?: number;
     eligible_departments?: string;
     deadline?: string;
+    ctc?: string;
+    description?: string;
+    hiring_process?: string;
+    required_skills?: string;
+    location?: string;
+    company_type?: string;
   }) {
     const response = await api.put(`/companies/${id}`, data);
     return response.data;
@@ -75,6 +87,16 @@ export const adminService = {
 
   async closeDrive(companyId: string) {
     const response = await api.post(`/companies/${companyId}/close`);
+    return response.data;
+  },
+
+  async archiveDrive(companyId: string) {
+    const response = await api.post(`/companies/${companyId}/archive`);
+    return response.data;
+  },
+
+  async duplicateDrive(companyId: string, newDeadline: string) {
+    const response = await api.post(`/companies/${companyId}/duplicate`, { new_deadline: newDeadline });
     return response.data;
   },
 

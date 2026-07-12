@@ -9,6 +9,12 @@ export interface RecentActivity {
   timestamp: number;
 }
 
+export interface RecentDrive {
+  id: string;
+  name: string;
+  role: string;
+}
+
 export interface SavedFilter {
   id: string;
   name: string;
@@ -21,11 +27,13 @@ interface MemoryState {
   lastOpenedDriveId: string | null;
   lastOpenedDriveName: string | null;
   recentlyViewedApplicants: string[];
+  recentDrives: RecentDrive[];
   savedFilters: SavedFilter[];
   /* Actions */
   addActivity: (activity: Omit<RecentActivity, "id" | "timestamp">) => void;
   setLastDrive: (id: string, name: string) => void;
   addViewedApplicant: (applicantId: string) => void;
+  addRecentDrive: (drive: RecentDrive) => void;
   addSavedFilter: (filter: Omit<SavedFilter, "id" | "createdAt">) => void;
   removeSavedFilter: (id: string) => void;
   clearMemory: () => void;
@@ -38,6 +46,7 @@ export const useMemoryStore = create<MemoryState>()(
       lastOpenedDriveId: null,
       lastOpenedDriveName: null,
       recentlyViewedApplicants: [],
+      recentDrives: [],
       savedFilters: [],
 
       addActivity: (activity) => {
@@ -64,6 +73,16 @@ export const useMemoryStore = create<MemoryState>()(
         });
       },
 
+      addRecentDrive: (drive) => {
+        const { recentDrives } = get();
+        set({
+          recentDrives: [
+            drive,
+            ...recentDrives.filter((d) => d.id !== drive.id),
+          ].slice(0, 3),
+        });
+      },
+
       addSavedFilter: (filter) => {
         const { savedFilters } = get();
         set({
@@ -85,6 +104,7 @@ export const useMemoryStore = create<MemoryState>()(
           lastOpenedDriveId: null,
           lastOpenedDriveName: null,
           recentlyViewedApplicants: [],
+          recentDrives: [],
           savedFilters: [],
         });
       },
@@ -95,6 +115,7 @@ export const useMemoryStore = create<MemoryState>()(
         lastOpenedDriveId: state.lastOpenedDriveId,
         lastOpenedDriveName: state.lastOpenedDriveName,
         recentlyViewedApplicants: state.recentlyViewedApplicants,
+        recentDrives: state.recentDrives,
         savedFilters: state.savedFilters,
       }),
     }

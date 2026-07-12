@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
-import { format, formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import {
   Users, Building2, FileCheck, Clock, AlertTriangle,
   RefreshCw, UserPlus, XCircle, CheckCircle2,
@@ -43,16 +43,16 @@ const ACTIVITY_ICONS = {
 };
 
 const ACTIVITY_COLORS: Record<string, string> = {
-  shortlisted: "text-blue-400 bg-blue-500/10",
-  eligibility_update: "text-amber-400 bg-amber-500/10",
-  panel_assigned: "text-violet-400 bg-violet-500/10",
-  deadline_expiring: "text-rose-400 bg-rose-500/10",
-  offer_released: "text-emerald-400 bg-emerald-500/10",
-  interview_scheduled: "text-indigo-400 bg-indigo-500/10",
-  application_submitted: "text-zinc-400 bg-zinc-500/10",
-  drive_opened: "text-emerald-400 bg-emerald-500/10",
-  slot_conflict: "text-red-400 bg-red-500/10",
-  recruiter_action: "text-orange-400 bg-orange-500/10",
+  shortlisted: "text-blue-600 bg-blue-50",
+  eligibility_update: "text-amber-600 bg-amber-50",
+  panel_assigned: "text-violet-600 bg-violet-50",
+  deadline_expiring: "text-red-600 bg-red-50",
+  offer_released: "text-green-600 bg-green-50",
+  interview_scheduled: "text-indigo-600 bg-indigo-50",
+  application_submitted: "text-gray-500 bg-gray-100",
+  drive_opened: "text-green-600 bg-green-50",
+  slot_conflict: "text-red-600 bg-red-50",
+  recruiter_action: "text-orange-600 bg-orange-50",
 };
 
 export function ActivityStream({
@@ -76,11 +76,11 @@ export function ActivityStream({
     <div className={cn("space-y-3", compact && "space-y-1")}>
       {showHeader && (
         <div className="flex items-center justify-between">
-          <div className="op-label text-zinc-500">Activity Stream</div>
+          <div className="text-xs font-medium text-gray-500">Activity Stream</div>
           {events.length > max && (
             <button
               onClick={() => setShowAll(!showAll)}
-              className="text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors"
+              className="text-[10px] text-gray-400 hover:text-gray-600 transition-colors"
             >
               {showAll ? "Show less" : `View all (${events.length})`}
             </button>
@@ -98,30 +98,30 @@ export function ActivityStream({
                 <div
                   className={cn(
                     "w-6 h-6 rounded-md flex items-center justify-center",
-                    ACTIVITY_COLORS[event.type] || "bg-zinc-500/10 text-zinc-400"
+                    ACTIVITY_COLORS[event.type] || "bg-gray-100 text-gray-400"
                   )}
                 >
                   <Icon className="w-3 h-3" />
                 </div>
-                {!isLast && <div className="w-px flex-1 bg-zinc-800/30 my-1" />}
+                {!isLast && <div className="w-px flex-1 bg-gray-100 my-1" />}
               </div>
               <div className={cn("pb-3 flex-1 min-w-0", isLast && "pb-0")}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className={cn(
-                      "text-zinc-300",
+                      "text-gray-700",
                       compact ? "text-[12px] leading-tight" : "text-sm"
                     )}>
-                      <span className="font-medium">{event.actor}</span>{" "}
-                      <span className="opacity-70">{event.target}</span>
+                      <span className="font-medium text-gray-900">{event.actor}</span>{" "}
+                      <span className="text-gray-500">{event.target}</span>
                     </p>
                     {event.detail && (
-                      <p className="text-[11px] text-zinc-600 mt-0.5">
+                      <p className="text-[11px] text-gray-400 mt-0.5">
                         {event.detail}
                       </p>
                     )}
                   </div>
-                  <span className="text-[10px] text-zinc-700 whitespace-nowrap tabular-nums shrink-0 mt-0.5">
+                  <span className="text-[10px] text-gray-400 whitespace-nowrap tabular-nums shrink-0 mt-0.5">
                     {formatDistanceToNow(event.timestamp, { addSuffix: true })}
                   </span>
                 </div>
@@ -132,7 +132,7 @@ export function ActivityStream({
       </div>
 
       {events.length === 0 && (
-        <p className="text-xs text-zinc-600 py-4 text-center">No activity recorded yet</p>
+        <p className="text-xs text-gray-400 py-4 text-center">No activity recorded yet</p>
       )}
     </div>
   );

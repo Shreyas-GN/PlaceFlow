@@ -1,170 +1,165 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { GraduationCap, Loader2, ArrowRight } from "lucide-react";
+import { GraduationCap, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { authService } from "@/services/auth.service";
-import { motion } from "framer-motion";
+import { FormField } from "@/components/shared/FormField";
+
+const registerSchema = z.object({
+  full_name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Enter a valid email address"),
+  department: z.string().min(1, "Department is required"),
+  cgpa: z.coerce
+    .number({ message: "Enter a valid CGPA" })
+    .min(0, "CGPA must be 0 or above")
+    .max(10, "CGPA must be 10 or below"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+type RegisterForm = z.infer<typeof registerSchema>;
+
+const INPUT_CLS =
+  "w-full bg-white border border-gray-300 rounded-[10px] px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-900 placeholder:text-gray-400";
 
 export default function RegisterPage() {
-  const [formData, setFormData] = useState({
-    full_name: "",
-    email: "",
-    password: "",
-    department: "",
-    cgpa: "",
-  });
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<RegisterForm>({
+    resolver: zodResolver(registerSchema) as any,
+    mode: "onBlur",
+  });
 
+  const onSubmit = async (data: RegisterForm) => {
     try {
-      await authService.register({
-        ...formData,
-        cgpa: parseFloat(formData.cgpa),
-      });
-      toast.success("Account created! Please log in.");
+      await authService.register(data);
+      toast.success("Account created. Please sign in.");
       router.push("/login");
     } catch (error: any) {
       const detail = error.response?.data?.detail;
-      const errorMessage = typeof detail === "string" 
-        ? detail 
-        : Array.isArray(detail)
+      const message =
+        typeof detail === "string"
+          ? detail
+          : Array.isArray(detail)
           ? detail[0]?.msg || "Validation error"
-          : "Registration failed";
-      
-      toast.error(errorMessage);
-    } finally {
-      setIsLoading(false);
+          : "Registration failed. Please try again.";
+      toast.error(message);
     }
   };
 
   return (
-    <div className="min-h-screen bg-layer-1 flex items-center justify-center p-6 relative overflow-hidden">
-
-      
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-md"
-      >
+    <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center p-6">
+      <div className="w-full max-w-md">
+        {/* Brand */}
         <div className="text-center mb-8">
-          <motion.div 
-            whileHover={{ rotate: 10 }}
-            className="inline-flex items-center gap-2 font-semibold text-2xl mb-4"
-          >
-            <div className="w-10 h-10 rounded-md bg-primary flex items-center justify-center">
-              <GraduationCap className="w-6 h-6 text-primary-foreground" />
+          <Link href="/" className="inline-flex items-center gap-2.5 mb-6">
+            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center">
+              <GraduationCap className="w-6 h-6 text-white" />
             </div>
-            <span className="text-white">PlaceFlow</span>
-          </motion.div>
-          <h1 className="text-2xl font-semibold tracking-tight">Create an account</h1>
-          <p className="text-zinc-500 mt-1 text-sm">Join the placement coordination platform</p>
+            <span className="font-semibold text-xl text-gray-900">PlaceFlow</span>
+          </Link>
+          <h1 className="text-2xl font-semibold text-gray-900">Create account</h1>
+          <p className="text-gray-500 mt-1.5 text-sm">
+            Join the campus placement platform.
+          </p>
         </div>
 
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-layer-2 border border-zinc-800/60 rounded-2xl p-8 shadow-elevated"
-        >
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-500">Full Name</label>
-              <input
-                type="text"
-                required
-                value={formData.full_name}
-                onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                placeholder="John Doe"
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-zinc-700"
-              />
-            </div>
+        {/* Card */}
+        <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-card">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+            <FormField label="Full Name" error={errors.full_name} required>
+              {(id) => (
+                <input
+                  id={id}
+                  type="text"
+                  {...register("full_name")}
+                  placeholder="Jane Doe"
+                  className={INPUT_CLS}
+                />
+              )}
+            </FormField>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-500">Email</label>
-              <input
-                type="email"
-                required
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="john@university.edu"
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-zinc-700"
-              />
-            </div>
+            <FormField label="Email" error={errors.email} required>
+              {(id) => (
+                <input
+                  id={id}
+                  type="email"
+                  {...register("email")}
+                  placeholder="jane@university.edu"
+                  className={INPUT_CLS}
+                />
+              )}
+            </FormField>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-zinc-500">Department</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.department}
-                  onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                  placeholder="CSE"
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-zinc-700"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-zinc-500">CGPA</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="10"
-                  required
-                  value={formData.cgpa}
-                  onChange={(e) => setFormData({ ...formData, cgpa: e.target.value })}
-                  placeholder="9.5"
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-zinc-700"
-                />
-              </div>
+              <FormField label="Department" error={errors.department} required>
+                {(id) => (
+                  <input
+                    id={id}
+                    type="text"
+                    {...register("department")}
+                    placeholder="CSE"
+                    className={INPUT_CLS}
+                  />
+                )}
+              </FormField>
+
+              <FormField label="CGPA" error={errors.cgpa} required>
+                {(id) => (
+                  <input
+                    id={id}
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="10"
+                    {...register("cgpa")}
+                    placeholder="9.5"
+                    className={INPUT_CLS}
+                  />
+                )}
+              </FormField>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-500">Password</label>
-              <input
-                type="password"
-                required
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                placeholder="••••••••"
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-zinc-700"
-              />
-            </div>
-
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              type="submit"
-              disabled={isLoading}
-              className="w-full h-12 bg-white text-black rounded-md font-semibold flex items-center justify-center gap-2 text-sm hover:bg-primary hover:text-white transition-all disabled:opacity-50 mt-2"
-            >
-              {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-              {isLoading ? "Creating account..." : (
-                <>
-                  Register
-                  <ArrowRight className="w-4 h-4" />
-                </>
+            <FormField label="Password" error={errors.password} required>
+              {(id) => (
+                <input
+                  id={id}
+                  type="password"
+                  {...register("password")}
+                  placeholder="••••••••"
+                  className={INPUT_CLS}
+                />
               )}
-            </motion.button>
+            </FormField>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full h-11 bg-blue-600 text-white rounded-[10px] font-medium text-sm flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+            >
+              {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+              {isSubmitting ? "Creating account..." : "Create Account"}
+            </button>
           </form>
 
-          <div className="mt-8 text-center pt-6 border-t border-zinc-800">
-            <p className="text-sm text-zinc-500">
+          <div className="mt-6 pt-6 border-t border-gray-100 text-center">
+            <p className="text-sm text-gray-500">
               Already have an account?{" "}
-              <Link href="/login" className="text-primary font-semibold hover:underline">
+              <Link href="/login" className="text-blue-600 font-medium hover:underline">
                 Sign in
               </Link>
             </p>
           </div>
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
     </div>
   );
 }

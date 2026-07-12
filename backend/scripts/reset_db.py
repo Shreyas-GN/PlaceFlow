@@ -1,3 +1,9 @@
+import sys
+from pathlib import Path
+
+# Add the backend directory to sys.path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from sqlalchemy import text
 from app.db.session import SessionLocal, engine
 from app.db.base_class import Base
@@ -16,6 +22,8 @@ def reset_database():
         db.execute(text("TRUNCATE TABLE companies CASCADE"))
         db.execute(text("TRUNCATE TABLE students CASCADE"))
         db.execute(text("TRUNCATE TABLE admins CASCADE"))
+        db.execute(text("TRUNCATE TABLE notifications CASCADE"))
+        db.execute(text("TRUNCATE TABLE audit_logs CASCADE"))
         db.commit()
         print("All data cleared.")
 
@@ -24,7 +32,7 @@ def reset_database():
         admin = Admin(
             full_name="Shreyas Admin",
             email="shreyasgn11@outlook.com",
-            password_hash=get_password_hash("passtheword"),
+            password_hash=get_password_hash("Supabase"),
             role="admin"
         )
         db.add(admin)

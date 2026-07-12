@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from typing import List
 from app.schemas.company import CompanyCreate, CompanyUpdate, CompanyResponse, DriveCloseConsequence
@@ -10,9 +11,14 @@ from app.models.admin import Admin
 
 router = APIRouter(prefix="/companies", tags=["companies"])
 
+
+class DuplicateRequest(BaseModel):
+    new_deadline: str
+
+
 @router.post("/", response_model=CompanyResponse)
 def create_company(
-    company_in: CompanyCreate, 
+    company_in: CompanyCreate,
     db: Session = Depends(get_db),
     current_admin: Admin = Depends(AdminService.get_current_admin)
 ):
@@ -38,6 +44,30 @@ def get_eligible_companies(
 ):
     return CompanyService.get_eligible_companies(db, current_user)
 
+@router.get("/{company_id}", response_model=CompanyResponse)
+def get_company(
+    company_id: str,
+    db: Session = Depends(get_db)
+):
+    return CompanyService.get_company(db, company_id)
+
+@router.post("/{company_id}/archive", response_model=CompanyResponse)
+def archive_drive(
+    company_id: str,
+    db: Session = Depends(get_db),
+    current_admin: Admin = Depends(AdminService.get_current_admin)
+):
+    return CompanyService.archive_drive(db, company_id, admin=current_admin)
+
+@router.post("/{company_id}/duplicate", response_model=CompanyResponse)
+def duplicate_drive(
+    company_id: str,
+    body: DuplicateRequest,
+    db: Session = Depends(get_db),
+    current_admin: Admin = Depends(AdminService.get_current_admin)
+):
+    return CompanyService.duplicate_drive(db, company_id, body.new_deadline, admin=current_admin)
+
 @router.post("/{company_id}/close")
 def close_drive(
     company_id: str,
@@ -50,6 +80,6 @@ def close_drive(
 def get_close_consequences(
     company_id: str,
     db: Session = Depends(get_db),
-    current_admin: Admin = Depends(AdminService.get_current_admin)
+    _current_admin: Admin = Depends(AdminService.get_current_admin)
 ):
     return CompanyService.get_drive_consequences(db, company_id)

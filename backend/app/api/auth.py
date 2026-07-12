@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.schemas.student import StudentCreate, StudentResponse, StudentUpdate, ChangePassword
-from app.schemas.auth import LoginSchema, Token
+from app.schemas.auth import LoginSchema, Token, ForgotPasswordRequest, ResetPasswordRequest
 from app.services.auth_service import AuthService, get_db
 from app.models.student import Student
 
@@ -39,3 +39,11 @@ def change_password(
     db: Session = Depends(get_db)
 ):
     return AuthService.change_password(db, current_user, passwords.current_password, passwords.new_password)
+
+@router.post("/forgot-password")
+def forgot_password(body: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    return AuthService.forgot_password(db, body.email)
+
+@router.post("/reset-password")
+def reset_password(body: ResetPasswordRequest, db: Session = Depends(get_db)):
+    return AuthService.reset_password(db, body.token, body.new_password)

@@ -2,10 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useNotificationStore } from "@/store/notification.store";
-import { Bell, Check, Clock, MessageSquare, Briefcase, CheckCircle2, ShieldAlert } from "lucide-react";
+import { Bell, Check, Clock, MessageSquare, Briefcase, CheckCircle2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
 
 export default function NotificationDropdown() {
   const { notifications, unreadCount, fetchNotifications, markAsRead, markAllAsRead, isLoading } = useNotificationStore();
@@ -29,141 +28,109 @@ export default function NotificationDropdown() {
   }, []);
 
   const getIcon = (title: string) => {
-    if (title.includes("Submitted")) return <Briefcase className="w-4 h-4 text-primary" />;
-    if (title.includes("Shortlisted")) return <CheckCircle2 className="w-4 h-4 text-emerald-500" />;
-    if (title.includes("Status Update")) return <MessageSquare className="w-4 h-4 text-blue-500" />;
-    return <Bell className="w-4 h-4 text-slate-400" />;
+    if (title.includes("Submitted")) return <Briefcase className="w-4 h-4 text-blue-600" />;
+    if (title.includes("Shortlisted")) return <CheckCircle2 className="w-4 h-4 text-green-600" />;
+    if (title.includes("Status Update")) return <MessageSquare className="w-4 h-4 text-blue-600" />;
+    return <Bell className="w-4 h-4 text-gray-400" />;
   };
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <motion.button 
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+      <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-3 rounded-[1rem] transition-all hover:bg-white/[0.03] group border border-transparent hover:border-white/5 shadow-2xl"
-      >
-        <Bell className={cn(
-          "w-6 h-6 transition-colors",
-          isOpen || unreadCount > 0 ? "text-primary fill-primary/10" : "text-slate-500 group-hover:text-slate-200"
-        )} />
-        <AnimatePresence>
-          {unreadCount > 0 && (
-            <motion.span 
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0 }}
-              className="absolute top-2 right-2 w-4 h-4 bg-primary text-[10px] font-semibold text-primary-foreground rounded-full flex items-center justify-center ring-4 ring-[#050505]"
-            >
-              {unreadCount > 9 ? '!' : unreadCount}
-            </motion.span>
-          )}
-        </AnimatePresence>
-      </motion.button>
-
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div 
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="absolute right-0 mt-4 w-80 sm:w-[420px] bg-[#0F0F15] border border-white/5 rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] overflow-hidden z-[100] backdrop-blur-3xl"
-          >
-            {/* Header */}
-            <div className="p-8 border-b border-white/5 flex items-center justify-between bg-white/[0.01]">
-              <div className="flex items-center gap-3">
-                <ShieldAlert className="w-5 h-5 text-primary" />
-                <h3 className="text-lg font-medium">Signals</h3>
-              </div>
-              {unreadCount > 0 && (
-                <button 
-                  onClick={() => markAllAsRead()}
-                  className="text-xs text-muted-foreground hover:bg-primary/10 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-2"
-                >
-                  <Check className="w-3 h-3" /> Mark all read
-                </button>
-              )}
-            </div>
-
-            {/* Body */}
-            <div className="max-h-[32rem] overflow-y-auto scrollbar-hide">
-              {isLoading && notifications.length === 0 ? (
-                <div className="p-12 text-center space-y-6">
-                  <div className="w-12 h-12 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-                  <p className="text-xs text-muted-foreground">Synchronizing Infrastructure...</p>
-                </div>
-              ) : notifications.length === 0 ? (
-                <div className="p-16 text-center">
-                  <div className="w-20 h-20 bg-white/5 rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-inner">
-                    <Bell className="w-8 h-8 text-slate-800" />
-                  </div>
-                  <p className="text-sm text-zinc-400">All caught up</p>
-                  <p className="text-xs text-muted-foreground mt-2">No new notifications</p>
-                </div>
-              ) : (
-                <div className="divide-y divide-white/5">
-                  {notifications.map((notif, index) => (
-                    <motion.div 
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      key={notif.id}
-                      onClick={() => {
-                        if (!notif.is_read) markAsRead(notif.id);
-                      }}
-                      className={cn(
-                        "p-7 transition-all cursor-pointer group hover:bg-white/[0.03] relative",
-                        !notif.is_read ? "bg-primary/[0.01]" : "opacity-40"
-                      )}
-                    >
-                      <div className="flex gap-6">
-                        <div className={cn(
-                          "w-12 h-12 rounded-lg flex items-center justify-center shrink-0 border transition-all duration-500 shadow-inner",
-                          !notif.is_read ? "bg-white/5 border-primary/20 scale-110" : "bg-white/[0.01] border-white/5"
-                        )}>
-                          {getIcon(notif.title)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-4 mb-1">
-                            <p className={cn(
-                              "text-sm font-medium truncate",
-                              !notif.is_read ? "text-slate-100" : "text-slate-500"
-                            )}>
-                              {notif.title}
-                            </p>
-                            <span className="text-xs text-muted-foreground shrink-0 flex items-center gap-1.5">
-                              <Clock className="w-2.5 h-2.5" />
-                              {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true })}
-                            </span>
-                          </div>
-                          <p className="text-sm text-slate-500 leading-relaxed font-medium line-clamp-2 italic">
-                            "{notif.message}"
-                          </p>
-                        </div>
-                        {!notif.is_read && (
-                          <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                          </div>
-                        )}
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Footer */}
-            <div className="p-6 border-t border-white/5 bg-white/[0.01] text-center">
-              <div className="flex items-center justify-center gap-2">
-                <div className="w-1 h-1 rounded-full bg-emerald-500" />
-                <p className="text-xs text-muted-foreground">
-                   Operational Stream Active
-                </p>
-              </div>
-            </div>
-          </motion.div>
+        className={cn(
+          "relative p-2 rounded-lg transition-colors",
+          isOpen ? "bg-gray-100 text-gray-900" : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
         )}
-      </AnimatePresence>
+      >
+        <Bell className="w-5 h-5" />
+        {unreadCount > 0 && (
+          <span className="absolute top-1 right-1 w-4 h-4 bg-blue-600 text-[10px] font-semibold text-white rounded-full flex items-center justify-center">
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
+        )}
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-gray-200 rounded-xl shadow-floating overflow-hidden z-[100]">
+          {/* Header */}
+          <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
+            {unreadCount > 0 && (
+              <button
+                onClick={() => markAllAsRead()}
+                className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 transition-colors"
+              >
+                <Check className="w-3 h-3" /> Mark all read
+              </button>
+            )}
+          </div>
+
+          {/* Body */}
+          <div className="max-h-96 overflow-y-auto">
+            {isLoading && notifications.length === 0 ? (
+              <div className="p-8 text-center">
+                <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                <p className="text-xs text-gray-400">Loading notifications...</p>
+              </div>
+            ) : notifications.length === 0 ? (
+              <div className="p-10 text-center">
+                <Bell className="w-8 h-8 text-gray-200 mx-auto mb-3" />
+                <p className="text-sm font-medium text-gray-900">All caught up</p>
+                <p className="text-xs text-gray-400 mt-1">No new notifications</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-100">
+                {notifications.map((notif) => (
+                  <div
+                    key={notif.id}
+                    onClick={() => { if (!notif.is_read) markAsRead(notif.id); }}
+                    className={cn(
+                      "p-4 transition-colors cursor-pointer hover:bg-gray-50 relative",
+                      !notif.is_read ? "bg-blue-50/40" : ""
+                    )}
+                  >
+                    <div className="flex gap-3">
+                      <div className={cn(
+                        "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border",
+                        !notif.is_read ? "bg-blue-50 border-blue-200" : "bg-gray-50 border-gray-200"
+                      )}>
+                        {getIcon(notif.title)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className={cn(
+                            "text-sm font-medium truncate",
+                            !notif.is_read ? "text-gray-900" : "text-gray-500"
+                          )}>
+                            {notif.title}
+                          </p>
+                          <span className="text-[10px] text-gray-400 shrink-0 flex items-center gap-1 whitespace-nowrap mt-0.5">
+                            <Clock className="w-2.5 h-2.5" />
+                            {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true })}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{notif.message}</p>
+                      </div>
+                      {!notif.is_read && (
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                          <div className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="px-4 py-2.5 border-t border-gray-100 flex items-center justify-center gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+            <p className="text-xs text-gray-400">Live updates enabled</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

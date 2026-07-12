@@ -9,11 +9,8 @@ import {
   Settings,
   LogOut,
   GraduationCap,
-  Clock,
-  FileText,
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
-import { useMemoryStore } from "@/store/memory.store";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -28,7 +25,6 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const logout = useAuthStore((state) => state.logout);
-  const memory = useMemoryStore();
 
   const handleLogout = () => {
     logout();
@@ -37,35 +33,35 @@ export default function Sidebar() {
   };
 
   return (
-    <div className="flex h-full w-52 flex-col bg-layer-2 border-r border-zinc-800/60 relative z-20">
+    <div className="flex h-full w-52 flex-col bg-white border-r border-gray-200">
       {/* Brand */}
-      <div className="flex h-12 items-center px-3 border-b border-zinc-800/40">
-        <Link href="/dashboard" className="flex items-center gap-2 group">
-          <div className="w-6 h-6 rounded bg-primary flex items-center justify-center">
-            <GraduationCap className="w-3 h-3 text-primary-foreground" />
+      <div className="flex h-14 items-center px-4 border-b border-gray-100">
+        <Link href="/dashboard" className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center">
+            <GraduationCap className="w-4 h-4 text-white" />
           </div>
-          <span className="font-semibold text-sm tracking-tight text-foreground">PlaceFlow</span>
+          <span className="font-semibold text-sm text-gray-900">PlaceFlow</span>
         </Link>
       </div>
 
       {/* Navigation */}
-      <nav className="space-y-0.5 px-1.5 py-3">
+      <nav className="flex-1 px-2 py-4 space-y-0.5">
         {navigation.map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link key={item.name} href={item.href}>
               <div
                 className={cn(
-                  "flex items-center gap-2.5 px-2 py-1 text-xs relative rounded hover:bg-zinc-800/30 transition-colors",
+                  "relative flex items-center gap-2.5 px-3 py-2 text-sm rounded-[10px] transition-colors",
                   isActive
-                    ? "text-zinc-200 font-medium bg-zinc-800/20"
-                    : "text-zinc-500 hover:text-zinc-300"
+                    ? "bg-blue-50 text-blue-700 font-medium"
+                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                 )}
               >
                 {isActive && (
-                  <div className="absolute inset-y-1 left-0 w-[2px] bg-primary rounded-r" />
+                  <div className="absolute inset-y-2 left-0 w-0.5 bg-blue-600 rounded-r" />
                 )}
-                <item.icon className="w-3.5 h-3.5 shrink-0" />
+                <item.icon className="w-4 h-4 shrink-0" />
                 <span>{item.name}</span>
               </div>
             </Link>
@@ -73,48 +69,13 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* System Memory — Resume context */}
-      {memory.lastOpenedDriveName && (
-        <div className="px-3 py-2 mx-1.5 mb-1 rounded-lg bg-zinc-800/20 border border-zinc-800/40">
-          <div className="flex items-center gap-1.5 mb-1">
-            <Clock className="w-2.5 h-2.5 text-zinc-600" />
-            <span className="text-[10px] text-zinc-600 uppercase tracking-[0.08em] font-semibold">
-              Continue
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <FileText className="w-3 h-3 text-primary shrink-0" />
-            <span className="text-[11px] text-zinc-400 truncate">{memory.lastOpenedDriveName}</span>
-          </div>
-        </div>
-      )}
-
-      {/* Recent activity */}
-      <div className="px-3 py-1.5 mx-1.5 mb-1">
-        <div className="flex items-center gap-1.5 mb-1">
-          <Clock className="w-2.5 h-2.5 text-zinc-600" />
-          <span className="text-[10px] text-zinc-600 uppercase tracking-[0.08em] font-semibold">
-            Recent
-          </span>
-        </div>
-        {memory.recentActivities.slice(0, 3).map((a) => (
-          <div key={a.id} className="flex items-center gap-1.5 py-0.5">
-            <div className="w-1 h-1 rounded-full bg-zinc-700 shrink-0" />
-            <span className="text-[10px] text-zinc-500 truncate">{a.label}</span>
-          </div>
-        ))}
-        {memory.recentActivities.length === 0 && (
-          <p className="text-[10px] text-zinc-600">No recent activity</p>
-        )}
-      </div>
-
-      {/* User + Sign Out */}
-      <div className="mt-auto p-2 border-t border-zinc-800/40">
+      {/* Sign Out */}
+      <div className="p-2 border-t border-gray-100">
         <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-2.5 px-2 py-1 text-xs text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors rounded"
+          className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors rounded-[10px]"
         >
-          <LogOut className="w-3 h-3" />
+          <LogOut className="w-4 h-4" />
           Sign Out
         </button>
       </div>

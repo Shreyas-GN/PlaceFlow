@@ -13,7 +13,7 @@ export function PageLoader({ className, fullPage }: PageLoaderProps) {
       className
     )}>
       <div className="relative">
-        <div className="w-8 h-8 border-2 border-zinc-800 border-t-primary rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-gray-200 border-t-blue-600 rounded-full animate-spin" />
       </div>
     </div>
   );

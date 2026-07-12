@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X, AlertTriangle, Loader2, Archive, Ban, CalendarX, Users, FileX } from "lucide-react";
+import { X, AlertTriangle, Loader2, Archive, Ban, CalendarX, Users } from "lucide-react";
 import { adminService } from "@/services/admin.service";
 import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
 
 interface ConsequenceData {
   drive_name: string;
@@ -67,128 +66,101 @@ export default function DriveCloseModal({ companyId, companyName, isOpen, onClos
 
   const isConfirmed = confirmText.toLowerCase() === companyName.toLowerCase();
 
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-            onClick={onClose}
-          />
+  if (!isOpen) return null;
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            className="relative w-full max-w-lg bg-layer-2 border border-zinc-800/60 rounded-2xl shadow-2xl overflow-hidden"
-          >
-            {/* Warning header */}
-            <div className="p-6 pb-4">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-rose-500/15 flex items-center justify-center shrink-0 border border-rose-500/20">
-                  <AlertTriangle className="w-5 h-5 text-rose-400" />
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+
+      <div className="relative w-full max-w-lg bg-white border border-gray-200 rounded-2xl shadow-floating overflow-hidden">
+        {/* Header */}
+        <div className="p-6 pb-4">
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 rounded-xl bg-red-50 border border-red-200 flex items-center justify-center shrink-0">
+              <AlertTriangle className="w-5 h-5 text-red-500" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-base font-semibold text-red-600">Close Placement Drive</h2>
+              <p className="text-sm text-gray-500 mt-1">
+                This action has institutional consequences. Review the impact below before proceeding.
+              </p>
+            </div>
+            <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors shrink-0">
+              <X className="w-4 h-4 text-gray-400" />
+            </button>
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div className="px-6 pb-6 flex items-center justify-center py-8">
+            <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
+          </div>
+        ) : consequences ? (
+          <>
+            <div className="px-6 space-y-2">
+              <div className="p-3 rounded-xl bg-red-50 border border-red-100">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Users className="w-3.5 h-3.5 text-red-500" />
+                  <span className="text-xs font-semibold text-red-700">Reject {consequences.pending_applicants} pending applicants</span>
                 </div>
-                <div className="min-w-0">
-                  <h2 className="text-lg font-semibold text-rose-400">Close Placement Drive</h2>
-                  <p className="text-sm text-zinc-400 mt-1">
-                    This action has institutional consequences. Review the impact below before proceeding.
-                  </p>
+                <p className="text-[11px] text-gray-500 ml-5">All applicants in Applied or Eligibility Conflict status will be moved to Rejected.</p>
+              </div>
+
+              {consequences.locked_scheduling && (
+                <div className="p-3 rounded-xl bg-amber-50 border border-amber-100">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <CalendarX className="w-3.5 h-3.5 text-amber-600" />
+                    <span className="text-xs font-semibold text-amber-700">Lock interview scheduling</span>
+                  </div>
+                  <p className="text-[11px] text-gray-500 ml-5">In-progress interviews will be archived. Scheduled interviews will be cancelled.</p>
                 </div>
-                <button onClick={onClose} className="p-1 hover:bg-zinc-800 rounded transition-colors shrink-0">
-                  <X className="w-4 h-4 text-zinc-500" />
-                </button>
+              )}
+
+              <div className="p-3 rounded-xl bg-gray-50 border border-gray-200">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Archive className="w-3.5 h-3.5 text-gray-500" />
+                  <span className="text-xs font-semibold text-gray-700">Archive recruiter access</span>
+                </div>
+                <p className="text-[11px] text-gray-500 ml-5">Recruiters will lose access to this drive and its applicant data.</p>
               </div>
             </div>
 
-            {isLoading ? (
-              <div className="px-6 pb-6 flex items-center justify-center py-8">
-                <Loader2 className="w-5 h-5 text-primary animate-spin" />
+            <div className="mx-6 mt-3 p-3 rounded-xl bg-gray-50 border border-gray-200">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-500">Total impacted records</span>
+                <span className="text-lg font-bold text-red-600 tabular-nums">{consequences.total_impacted}</span>
               </div>
-            ) : consequences ? (
-              <>
-                {/* Consequence list */}
-                <div className="px-6 space-y-2">
-                  <div className="p-3 rounded-lg bg-rose-500/5 border border-rose-500/10">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Users className="w-3.5 h-3.5 text-rose-400" />
-                      <span className="text-xs font-semibold text-rose-300">Reject {consequences.pending_applicants} pending applicants</span>
-                    </div>
-                    <p className="text-[11px] text-zinc-500 ml-5.5">
-                      All applicants in Applied or Eligibility Conflict status will be moved to Rejected.
-                    </p>
-                  </div>
+            </div>
 
-                  {consequences.locked_scheduling && (
-                    <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/10">
-                      <div className="flex items-center gap-2 mb-2">
-                        <CalendarX className="w-3.5 h-3.5 text-amber-400" />
-                        <span className="text-xs font-semibold text-amber-300">Lock interview scheduling</span>
-                      </div>
-                      <p className="text-[11px] text-zinc-500 ml-5.5">
-                        In-progress interviews will be archived. Scheduled interviews will be cancelled.
-                      </p>
-                    </div>
+            <div className="px-6 pt-4 pb-6">
+              <label className="text-xs font-medium text-gray-700 block mb-1.5">
+                Type <span className="text-gray-900 font-mono">{companyName}</span> to confirm
+              </label>
+              <input
+                type="text"
+                value={confirmText}
+                onChange={(e) => setConfirmText(e.target.value)}
+                placeholder={`Type "${companyName}" to confirm`}
+                className="w-full bg-white border border-gray-300 rounded-[10px] px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-all text-gray-900 placeholder:text-gray-400"
+              />
+              <div className="flex gap-3 mt-4">
+                <button onClick={onClose}
+                  className="flex-1 h-10 rounded-[10px] text-sm font-medium border border-gray-300 hover:bg-gray-50 transition-colors text-gray-700">
+                  Cancel
+                </button>
+                <button disabled={!isConfirmed || isClosing} onClick={handleClose}
+                  className="flex-[2] h-10 rounded-[10px] text-sm font-medium bg-red-600 text-white hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2">
+                  {isClosing ? (
+                    <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Closing...</>
+                  ) : (
+                    <><Ban className="w-3.5 h-3.5" /> Close Drive Permanently</>
                   )}
-
-                  <div className="p-3 rounded-lg bg-zinc-500/5 border border-zinc-800/40">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Archive className="w-3.5 h-3.5 text-zinc-400" />
-                      <span className="text-xs font-semibold text-zinc-300">Archive recruiter access</span>
-                    </div>
-                    <p className="text-[11px] text-zinc-500 ml-5.5">
-                      Recruiters will lose access to this drive and its applicant data.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Impact summary */}
-                <div className="mx-6 mt-3 p-3 rounded-lg bg-zinc-900/50 border border-zinc-800/40">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-zinc-400">Total impacted records</span>
-                    <span className="text-lg font-bold text-rose-400 tabular-nums">{consequences.total_impacted}</span>
-                  </div>
-                </div>
-
-                {/* Confirmation */}
-                <div className="px-6 pt-4 pb-6">
-                  <label className="text-[11px] text-zinc-500 block mb-1.5">
-                    Type <span className="text-zinc-300 font-mono">{companyName}</span> to confirm
-                  </label>
-                  <input
-                    type="text"
-                    value={confirmText}
-                    onChange={(e) => setConfirmText(e.target.value)}
-                    placeholder={`Type "${companyName}" to confirm`}
-                    className="w-full bg-zinc-900 border border-zinc-800/60 rounded px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-rose-500/40 transition-all"
-                  />
-                  <div className="flex gap-3 mt-4">
-                    <button
-                      onClick={onClose}
-                      className="flex-1 h-10 rounded text-xs font-medium border border-zinc-800/60 hover:bg-zinc-900 transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      disabled={!isConfirmed || isClosing}
-                      onClick={handleClose}
-                      className="flex-[2] h-10 rounded text-xs font-medium bg-rose-500 text-white hover:bg-rose-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
-                    >
-                      {isClosing ? (
-                        <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Closing...</>
-                      ) : (
-                        <><Ban className="w-3.5 h-3.5" /> Close Drive Permanently</>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </>
-            ) : null}
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
+                </button>
+              </div>
+            </div>
+          </>
+        ) : null}
+      </div>
+    </div>
   );
 }

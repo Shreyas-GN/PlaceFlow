@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from fastapi import HTTPException, status
+from fastapi import HTTPException
 from app.models.company import Company
 from app.models.application import Application
 from app.models.student import Student
@@ -191,6 +191,84 @@ class CompanyService:
             archived_recruiter_access=True,
             total_impacted=pending_count + interview_count,
         )
+
+    @staticmethod
+    def get_company(db: Session, company_id: str) -> Company:
+        db_company = db.query(Company).filter(Company.id == company_id).first()
+        if not db_company:
+            raise HTTPException(status_code=404, detail="Company not found")
+        return db_company
+
+    @staticmethod
+    def archive_drive(db: Session, company_id: str, admin: Admin = None) -> Company:
+        db_company = db.query(Company).filter(Company.id == company_id).first()
+        if not db_company:
+            raise HTTPException(status_code=404, detail="Company not found")
+        if db_company.status == "archived":
+            raise HTTPException(status_code=400, detail="Drive is already archived")
+
+        db_company.status = "archived"
+        db.commit()
+        db.refresh(db_company)
+
+        if admin:
+            AuditService.create_log(
+                db=db,
+                actor_id=str(admin.id),
+                actor_name=admin.full_name,
+                actor_role="admin",
+                action="archive_drive",
+                resource_type="drive",
+                resource_id=str(db_company.id),
+                details=f"Archived drive: {db_company.company_name} - {db_company.role}",
+            )
+
+        return db_company
+
+    @staticmethod
+    def duplicate_drive(db: Session, company_id: str, new_deadline: str, admin: Admin = None) -> Company:
+        from datetime import datetime as dt
+        source = db.query(Company).filter(Company.id == company_id).first()
+        if not source:
+            raise HTTPException(status_code=404, detail="Company not found")
+
+        try:
+            parsed_deadline = dt.fromisoformat(new_deadline.replace("Z", "+00:00"))
+        except ValueError:
+            raise HTTPException(status_code=422, detail="Invalid deadline format")
+
+        clone = Company(
+            company_name=source.company_name,
+            role=source.role,
+            package=source.package,
+            min_cgpa=source.min_cgpa,
+            eligible_departments=source.eligible_departments,
+            deadline=parsed_deadline,
+            status="active",
+            ctc=source.ctc,
+            description=source.description,
+            hiring_process=source.hiring_process,
+            required_skills=source.required_skills,
+            location=source.location,
+            company_type=source.company_type,
+        )
+        db.add(clone)
+        db.commit()
+        db.refresh(clone)
+
+        if admin:
+            AuditService.create_log(
+                db=db,
+                actor_id=str(admin.id),
+                actor_name=admin.full_name,
+                actor_role="admin",
+                action="duplicate_drive",
+                resource_type="drive",
+                resource_id=str(clone.id),
+                details=f"Duplicated drive from {source.company_name} (id={source.id})",
+            )
+
+        return clone
 
     @staticmethod
     def get_all_companies(db: Session):

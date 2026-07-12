@@ -18,13 +18,13 @@ export function EligibilityMatrix({
 }) {
   return (
     <div className={cn("space-y-1", compact && "space-y-0")}>
-      <div className="op-label text-zinc-500 mb-2">Eligibility Matrix</div>
+      <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Eligibility Matrix</div>
       {rows.map((row) => (
         <div
           key={row.label}
           className={cn(
             "flex items-center justify-between px-3 py-2 rounded-lg",
-            row.meets ? "bg-emerald-500/[0.04]" : "bg-red-500/[0.04]",
+            row.meets ? "bg-green-50" : "bg-red-50",
             compact && "py-1.5"
           )}
         >
@@ -32,22 +32,22 @@ export function EligibilityMatrix({
             <div
               className={cn(
                 "w-1.5 h-1.5 rounded-full shrink-0",
-                row.meets ? "bg-emerald-500" : "bg-red-500"
+                row.meets ? "bg-green-500" : "bg-red-500"
               )}
             />
-            <span className="text-xs text-zinc-400">{row.label}</span>
+            <span className="text-xs text-gray-600">{row.label}</span>
           </div>
           <div className="text-right">
             <span
               className={cn(
                 "text-xs font-medium tabular-nums",
-                row.meets ? "text-emerald-400" : "text-red-400"
+                row.meets ? "text-green-700" : "text-red-600"
               )}
             >
               {row.value}
             </span>
             {row.detail && (
-              <p className="text-[10px] text-zinc-600">{row.detail}</p>
+              <p className="text-[10px] text-gray-400">{row.detail}</p>
             )}
           </div>
         </div>
@@ -63,20 +63,20 @@ export function CompactEligibilityGrid({
 }) {
   return (
     <div className="grid grid-cols-2 gap-1.5">
-      <div className="op-label text-zinc-500 col-span-2 mb-1">Eligibility Matrix</div>
+      <div className="text-xs font-medium text-gray-400 uppercase tracking-wider col-span-2 mb-1">Eligibility Matrix</div>
       {rows.map((row) => (
         <div
           key={row.label}
           className={cn(
-            "flex items-center justify-between px-2 py-1.5 rounded",
-            row.meets ? "bg-emerald-500/[0.04]" : "bg-red-500/[0.04]"
+            "flex items-center justify-between px-2 py-1.5 rounded-lg",
+            row.meets ? "bg-green-50" : "bg-red-50"
           )}
         >
-          <span className="text-[11px] text-zinc-500">{row.label}</span>
+          <span className="text-[11px] text-gray-600">{row.label}</span>
           <span
             className={cn(
               "text-[11px] font-medium tabular-nums",
-              row.meets ? "text-emerald-400" : "text-red-400"
+              row.meets ? "text-green-700" : "text-red-600"
             )}
           >
             {row.value}

@@ -18,6 +18,14 @@ class Company(Base):
     status = Column(String, default="active", nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
+    # Phase 3 extended fields
+    ctc = Column(String, nullable=True)
+    description = Column(Text, nullable=True)
+    hiring_process = Column(Text, nullable=True)
+    required_skills = Column(Text, nullable=True)
+    location = Column(String, nullable=True)
+    company_type = Column(String, nullable=True)
+
     applications = relationship("Application", back_populates="company")
 
     def __repr__(self):

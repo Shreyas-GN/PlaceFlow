@@ -92,7 +92,7 @@ export default function SecurityPage() {
         To report a security vulnerability or for security-related inquiries, contact us at{" "}
         <a href="mailto:security@placeflow.app">security@placeflow.app</a>.
       </p>
-      <p className="text-zinc-600 text-xs mt-4">
+      <p className="text-gray-400 text-xs mt-4">
         We use PGP for security-related communications. Our public key is available on request.
       </p>
     </LegalPage>

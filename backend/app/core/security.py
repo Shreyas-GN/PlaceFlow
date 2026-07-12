@@ -40,3 +40,21 @@ def decode_token(token: str) -> dict:
         return decoded_token if decoded_token["exp"] >= datetime.now(timezone.utc).timestamp() else None
     except:
         return None
+
+RESET_TOKEN_EXPIRE_MINUTES = 15
+
+def create_reset_token(email: str) -> str:
+    expire = datetime.now(timezone.utc) + timedelta(minutes=RESET_TOKEN_EXPIRE_MINUTES)
+    to_encode = {"exp": expire, "sub": email, "purpose": "password_reset"}
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+def decode_reset_token(token: str) -> str | None:
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        if payload.get("purpose") != "password_reset":
+            return None
+        if payload["exp"] < datetime.now(timezone.utc).timestamp():
+            return None
+        return payload.get("sub")
+    except:
+        return None

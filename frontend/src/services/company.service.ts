@@ -9,6 +9,13 @@ export interface Company {
   eligible_departments: string;
   deadline: string;
   created_at: string;
+  status?: string;
+  ctc?: string;
+  description?: string;
+  hiring_process?: string;
+  required_skills?: string;
+  location?: string;
+  company_type?: string;
 }
 
 export const companyService = {
@@ -19,6 +26,11 @@ export const companyService = {
 
   async getEligibleCompanies() {
     const response = await api.get('/companies/eligible');
+    return response.data;
+  },
+
+  async getCompany(id: string): Promise<Company> {
+    const response = await api.get(`/companies/${id}`);
     return response.data;
   },
 };

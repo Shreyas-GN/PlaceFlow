@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { Download, FileText, CheckCircle, Clock, AlertTriangle, Info } from "lucide-react";
+import { Download, CheckCircle, AlertTriangle, Info } from "lucide-react";
 
 interface SystemNotice {
   id: string;
@@ -20,10 +20,10 @@ interface SystemNoticesProps {
 }
 
 const TYPE_STYLES = {
-  info: { icon: Info, color: "text-blue-400 bg-blue-500/10 border-blue-500/20" },
-  warning: { icon: AlertTriangle, color: "text-amber-400 bg-amber-500/10 border-amber-500/20" },
-  success: { icon: CheckCircle, color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
-  export: { icon: Download, color: "text-violet-400 bg-violet-500/10 border-violet-500/20" },
+  info: { icon: Info, color: "text-blue-700 bg-blue-50 border-blue-200" },
+  warning: { icon: AlertTriangle, color: "text-amber-700 bg-amber-50 border-amber-200" },
+  success: { icon: CheckCircle, color: "text-green-700 bg-green-50 border-green-200" },
+  export: { icon: Download, color: "text-violet-700 bg-violet-50 border-violet-200" },
 };
 
 export function SystemNotices({ notices, compact }: SystemNoticesProps) {
@@ -72,14 +72,14 @@ export function ExportButton({ label, recordCount, format: fileFormat }: { label
   return (
     <button
       onClick={() => {/* Export logic */}}
-      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-layer-2 border border-zinc-800/60 hover:border-primary/30 hover:bg-primary/5 transition-all text-left group"
+      className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-gray-200 hover:border-blue-200 hover:bg-blue-50 transition-all text-left group"
     >
-      <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-        <Download className="w-4 h-4 text-primary" />
+      <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+        <Download className="w-4 h-4 text-blue-600" />
       </div>
       <div className="min-w-0">
-        <p className="text-xs font-medium text-zinc-300">{label}</p>
-        <p className="text-[10px] text-zinc-600 tabular-nums">{fileFormat} · {recordCount.toLocaleString()} records</p>
+        <p className="text-xs font-medium text-gray-900">{label}</p>
+        <p className="text-[10px] text-gray-400 tabular-nums">{fileFormat} · {recordCount.toLocaleString()} records</p>
       </div>
     </button>
   );
